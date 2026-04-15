@@ -119,9 +119,6 @@ const ImageManager = () => {
                 textAlign: 'left', padding: '12px 18px',
                 background: activeSection === sec.key
                   ? 'rgba(201,169,110,0.15)' : 'transparent',
-                borderLeft: !isMobile
-                  ? activeSection === sec.key ? '3px solid #c9a96e' : '3px solid transparent'
-                  : 'none',
                 border: isMobile
                   ? activeSection === sec.key ? '1px solid #c9a96e' : '1px solid rgba(255,255,255,0.1)'
                   : 'none',

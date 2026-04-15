@@ -40,6 +40,14 @@ const ReviewCard = ({ review }) => (
 );
 
 
+// ── Social Links
+const SOCIAL_LINKS = [
+  { icon: '📸', label: 'Instagram', href: 'https://www.instagram.com/truebuild_project?utm_source=qr&igsh=ZmpjM2hteXl5NGxt' },
+  { icon: '💼', label: 'LinkedIn',  href: 'https://www.linkedin.com/company/truebuild-projects/' },
+  { icon: '👤', label: 'Facebook',  href: 'https://www.facebook.com/people/TrueBuild-Projects/61583582405966/' },
+];
+
+
 const Shop = () => {
   const [activeCategory, setActiveCategory] = useState('All');
   const [hoveredId,      setHoveredId]      = useState(null);
@@ -78,6 +86,7 @@ const Shop = () => {
     }
   };
   const allProducts = getProducts();
+
 
   // ✅ Uses merged product list for filtering
   const filtered = activeCategory === 'All'
@@ -124,7 +133,6 @@ const Shop = () => {
           </h1>
         </div>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          {/* Hamburger sidebar toggle on mobile */}
           {isMobile && (
             <button onClick={() => setSidebarOpen(true)} style={{
               background: '#1a1a1a', border: 'none', color: '#fff',
@@ -157,7 +165,6 @@ const Shop = () => {
         padding: isMobile ? '0' : '0 60px',
         boxSizing: 'border-box', alignItems: 'flex-start',
       }}>
-
 
         {/* ── DESKTOP SIDEBAR ── */}
         {!isMobile && (
@@ -214,7 +221,6 @@ const Shop = () => {
           </aside>
         )}
 
-
         {/* ── MOBILE SIDEBAR OVERLAY ── */}
         {isMobile && sidebarOpen && (
           <>
@@ -257,10 +263,8 @@ const Shop = () => {
           </>
         )}
 
-
         {/* ── RIGHT SIDE: FILTERS + PRODUCT GRID ── */}
         <div style={{ flex: 1, minWidth: 0 }}>
-
 
           {/* Category filter tabs */}
           <div style={{
@@ -270,7 +274,8 @@ const Shop = () => {
           }}>
             {SHOP_CATEGORIES.map(cat => (
               <button key={cat} onClick={() => setActiveCategory(cat)} style={{
-                padding: '8px 16px', border: '1px solid',
+                padding: '8px 16px',
+                border: '1px solid',
                 borderColor: activeCategory === cat ? '#1a1a1a' : '#ddd',
                 background: activeCategory === cat ? '#1a1a1a' : 'transparent',
                 color: activeCategory === cat ? '#fff' : '#888',
@@ -282,7 +287,6 @@ const Shop = () => {
               </button>
             ))}
           </div>
-
 
           {/* Product grid */}
           <div style={{
@@ -376,26 +380,22 @@ const Shop = () => {
             <div key={post.id} style={{ cursor: 'pointer' }}
               onMouseEnter={e => e.currentTarget.querySelector('img').style.transform = 'scale(1.04)'}
               onMouseLeave={e => e.currentTarget.querySelector('img').style.transform = 'scale(1)'}>
-              {/* Blog image */}
               <div style={{ height: '260px', overflow: 'hidden', marginBottom: '18px' }}>
                 <img src={post.img} alt={post.title} style={{
                   width: '100%', height: '100%', objectFit: 'cover',
                   transition: 'transform 0.5s ease', display: 'block',
                 }} />
               </div>
-              {/* Category label */}
               <p style={{
                 fontSize: '0.62rem', letterSpacing: '3px',
                 textTransform: 'uppercase', color: '#c9a96e',
                 marginBottom: '10px', fontFamily: 'sans-serif', fontWeight: '600',
               }}>{post.category}</p>
-              {/* Title */}
               <h3 style={{
                 fontFamily: "'Georgia', serif", fontSize: '1.05rem',
                 fontWeight: '400', color: '#1a1a1a', lineHeight: '1.55',
                 margin: '0 0 10px',
               }}>{post.title}</h3>
-              {/* Date */}
               <p style={{ fontSize: '0.72rem', color: '#bbb', fontFamily: 'sans-serif' }}>
                 {post.date}
               </p>
@@ -422,8 +422,6 @@ const Shop = () => {
           Latest Reviews
         </h2>
 
-
-        {/* Review cards — slide view */}
         <div style={{
           display: 'flex', gap: '20px',
           justifyContent: 'center', flexWrap: isMobile ? 'nowrap' : 'wrap',
@@ -442,8 +440,6 @@ const Shop = () => {
           ))}
         </div>
 
-
-        {/* Dot indicators */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '32px' }}>
           {REVIEWS.map((_, idx) => (
             <button key={idx} onClick={() => setReviewIndex(idx)} style={{
@@ -465,7 +461,6 @@ const Shop = () => {
         padding: isMobile ? '70px 24px' : '90px 60px',
         boxSizing: 'border-box',
       }}>
-        {/* Background image */}
         <img
           src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=1400&q=80"
           alt="Newsletter bg"
@@ -474,14 +469,11 @@ const Shop = () => {
             width: '100%', height: '100%', objectFit: 'cover', zIndex: 0,
           }}
         />
-        {/* Dark overlay */}
         <div style={{
           position: 'absolute', inset: 0, zIndex: 1,
           background: 'rgba(0,0,0,0.5)',
         }} />
 
-
-        {/* Content */}
         <div style={{ position: 'relative', zIndex: 2, maxWidth: '600px' }}>
           <h2 style={{
             fontFamily: "'Georgia', serif", color: '#fff',
@@ -496,7 +488,6 @@ const Shop = () => {
           }}>
             Join our email subscription now to get updates on promotions and coupons.
           </p>
-
 
           {subscribed ? (
             <p style={{ color: '#c9a96e', fontFamily: "'Georgia', serif", fontSize: '1.1rem', letterSpacing: '2px' }}>
@@ -533,36 +524,32 @@ const Shop = () => {
             </form>
           )}
 
-
-          {/* Social icons */}
+          {/* ✅ Social icons — real links added, YouTube removed */}
           <div style={{ display: 'flex', gap: '14px', marginTop: '28px' }}>
-            {[
-              { icon: '📸', label: 'Instagram' },
-              { icon: '💼', label: 'LinkedIn' },
-              { icon: '👤', label: 'Facebook' },
-            ].map((s, i) => (
-              <button key={i} style={{
-                width: '38px', height: '38px', borderRadius: '50%',
-                border: '1.5px solid rgba(255,255,255,0.6)',
-                background: 'transparent', color: '#fff',
-                cursor: 'pointer', fontSize: '0.9rem',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'all 0.3s',
-              }}
-                onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.2)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background='transparent'; }}
-                title={s.label}>
-                {s.icon}
-              </button>
+            {SOCIAL_LINKS.map((s, i) => (
+              <a key={i} href={s.href} target="_blank" rel="noopener noreferrer"
+                style={{ textDecoration: 'none' }}>
+                <button style={{
+                  width: '38px', height: '38px', borderRadius: '50%',
+                  border: '1.5px solid rgba(255,255,255,0.6)',
+                  background: 'transparent', color: '#fff',
+                  cursor: 'pointer', fontSize: '0.9rem',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'all 0.3s',
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.2)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background='transparent'; }}
+                  title={s.label}>
+                  {s.icon}
+                </button>
+              </a>
             ))}
           </div>
         </div>
       </section>
 
-
     </main>
   );
 };
-
 
 export default Shop;
