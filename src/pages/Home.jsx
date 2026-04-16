@@ -68,7 +68,7 @@ const Home = () => {
             color: '#c9a96e', fontSize: '0.68rem',
             letterSpacing: '6px', textTransform: 'uppercase',
             marginBottom: '14px', fontFamily: 'sans-serif',
-          }}>The Studio</p>
+          }}></p>
           <h1 style={{
             color: '#fff', fontFamily: "'Georgia', serif",
             fontSize: isMobile ? '2rem' : 'clamp(2rem, 5vw, 4.5rem)',

@@ -9,7 +9,7 @@ import {
   DEFAULT_IMAGES,
 } from '../context/SiteImagesContext';
 
-const ADMIN_PASSWORD = 'truebuild@admin2026';
+
 
 const EMPTY_FORM = {
   name: '', price: '', category: 'Artefacts',

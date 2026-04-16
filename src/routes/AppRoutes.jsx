@@ -1,6 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
-
+import ProtectedAdminRoute from '../components/ProtectedAdminRoute';
 const Home          = lazy(() => import('../pages/Home'));
 const About         = lazy(() => import('../pages/About'));
 const Overview      = lazy(() => import('../pages/Overview'));
@@ -52,7 +52,14 @@ const AppRoutes = () => (
       <Route path="/shop"                    element={<Shop />}         />
       <Route path="/contact"                 element={<Contact />}      />
       <Route path="/projects"               element={<Projects />}     />
-      <Route path="/admin"                   element={<AdminPanel />}   />
+      <Route 
+  path="/admin" 
+  element={
+    <ProtectedAdminRoute>
+      <AdminPanel />
+    </ProtectedAdminRoute>
+  } 
+/>
       <Route path="/my-orders"              element={<MyOrders />}     />
     </Routes>
   </Suspense>

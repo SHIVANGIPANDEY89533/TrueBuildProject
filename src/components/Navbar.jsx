@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import logo from '../assets/images/logo.jpeg';
 
-const ADMIN_PASSWORD = 'truebuild@123';
+
 
 const NAV_LINKS = [
   { label: 'Home',     path: '/'         },
@@ -81,8 +81,12 @@ const Navbar = () => {
 
   const handleAdminLogin = (e) => {
     e.preventDefault();
-    if (adminPass === ADMIN_PASSWORD) {
-      loginAdmin(); closeModal(); navigate('/admin');
+
+    const success = loginAdmin(adminPass.trim());   // 🔥 IMPORTANT
+
+    if (success) {
+      closeModal();
+      navigate('/admin');
     } else {
       setAdminError(true);
     }

@@ -433,11 +433,11 @@ const Contact = () => {
             </p>
             <p style={{ fontSize: '0.58rem', letterSpacing: '4px', textTransform: 'uppercase',
               color: '#999', marginBottom: '14px', fontFamily: 'sans-serif' }}>
-              Visit The Studio
+              Visit us 
             </p>
             <h3 style={{ fontFamily: "'Georgia', serif", fontSize: '1.1rem',
               fontWeight: '300', color: '#1a1a1a', margin: '0 0 10px' }}>
-              Ghaziabad Studio
+              Ghaziabad 
             </h3>
             <p style={{ fontFamily: 'sans-serif', fontSize: '0.8rem', color: '#666',
               lineHeight: '1.9', margin: '0 0 16px' }}>
@@ -491,11 +491,11 @@ const Contact = () => {
             </p>
             <p style={{ fontSize: '0.58rem', letterSpacing: '4px', textTransform: 'uppercase',
               color: '#999', marginBottom: '14px', fontFamily: 'sans-serif' }}>
-              Visit The Studio
+              Visit us 
             </p>
             <h3 style={{ fontFamily: "'Georgia', serif", fontSize: '1.1rem',
               fontWeight: '300', color: '#1a1a1a', margin: '0 0 10px' }}>
-              Amroha Studio
+              Amroha
             </h3>
             <p style={{ fontFamily: 'sans-serif', fontSize: '0.8rem', color: '#666',
               lineHeight: '1.9', margin: '0 0 16px' }}>
@@ -585,7 +585,7 @@ const Contact = () => {
 <div style={{ background: '#1a1a1a', padding: '28px 32px' }}>
   <p style={{ fontSize: '0.58rem', letterSpacing: '4px', textTransform: 'uppercase',
     color: '#c9a96e', marginBottom: '18px', fontFamily: 'sans-serif' }}>
-    Follow The Studio
+    Follow us 
   </p>
   <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
     {[
@@ -622,7 +622,7 @@ const Contact = () => {
           marginBottom: '2px' }}>
           <div style={{ height: isMobile ? '280px' : '400px' }}>
             <iframe
-              title="TrueBuild Projects — Ghaziabad Studio"
+              title="TrueBuild Projects —At Ghaziabad"
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3501.5!2d77.4538!3d28.6692!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cf1b7c0a0a3b5%3A0x7c0b1fc3d8abad9!2sDurga%20Enclave%2C%20GB%20Nagar%2C%20Ghaziabad%2C%20Uttar%20Pradesh%20201009!5e0!3m2!1sen!2sin!4v1"
               width="100%" height="100%"
               style={{ border: 'none', display: 'block' }}
@@ -641,7 +641,7 @@ const Contact = () => {
               color: '#c9a96e', marginBottom: '14px', fontFamily: 'sans-serif' }}>Find Us</p>
             <h2 style={{ fontFamily: "'Georgia', serif",
               fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: '300',
-              color: '#1a1a1a', margin: '0 0 20px' }}>Ghaziabad Studio</h2>
+              color: '#1a1a1a', margin: '0 0 20px' }}>Ghaziabad</h2>
             <div style={{ width: '36px', height: '1px', background: '#c9a96e', marginBottom: '20px' }} />
             <p style={{ fontFamily: "'Georgia', serif", fontSize: '1rem',
               color: '#555', lineHeight: '2', fontWeight: '300', marginBottom: '16px' }}>
@@ -687,7 +687,7 @@ const Contact = () => {
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr' }}>
           <div style={{ height: isMobile ? '280px' : '400px' }}>
             <iframe
-              title="TrueBuild Projects — Amroha Studio"
+              title="TrueBuild Projects — Amroha"
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3500.5!2d78.4678!3d28.9041!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390af5e5e5e5e5e5%3A0x0!2sAgraula+Kalan%2C+Hasanpur%2C+Amroha%2C+Uttar+Pradesh+244241!5e0!3m2!1sen!2sin!4v1"
               width="100%" height="100%"
               style={{ border: 'none', display: 'block' }}
@@ -706,7 +706,7 @@ const Contact = () => {
               color: '#c9a96e', marginBottom: '14px', fontFamily: 'sans-serif' }}>Find Us</p>
             <h2 style={{ fontFamily: "'Georgia', serif",
               fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: '300',
-              color: '#1a1a1a', margin: '0 0 20px' }}>Amroha Studio</h2>
+              color: '#1a1a1a', margin: '0 0 20px' }}>Amroha</h2>
             <div style={{ width: '36px', height: '1px', background: '#c9a96e', marginBottom: '20px' }} />
             <p style={{ fontFamily: "'Georgia', serif", fontSize: '1rem',
               color: '#555', lineHeight: '2', fontWeight: '300', marginBottom: '16px' }}>
