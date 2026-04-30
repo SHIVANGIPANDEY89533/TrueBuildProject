@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-
+import { useSiteImages } from '../context/SiteImagesContext';
 
 const About = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [hoveredCard, setHoveredCard] = useState(null);
+  const { images } = useSiteImages();
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -58,10 +59,9 @@ const About = () => {
           color: '#666', lineHeight: '2', fontWeight: '300',
           maxWidth: '600px',
         }}>
-          TrueBuild Projects was founded by two experienced engineers who spent years
-          delivering projects in professional service — and who shared a simple belief:
-          that clients deserve a single, trusted partner to take their project from the
-          very first foundation stone all the way through to the final piece of furniture.
+          TrueBuild Projects was founded by two experienced engineers who shared a simple belief: 
+          that clients deserve a single, trusted partner to take their project from 
+          Construction and Interior projects all the way through to the final piece of furniture.
         </p>
       </div>
 
@@ -93,7 +93,7 @@ const About = () => {
             }}>
               <div style={{ height: '240px', overflow: 'hidden' }}>
                 <img
-                  src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&q=80"
+                  src={images['about.gallery.image1']}
                   alt="Overview"
                   style={{
                     width: '100%', height: '100%', objectFit: 'cover',
@@ -128,7 +128,7 @@ const About = () => {
                   fontSize: '0.62rem', letterSpacing: '3px',
                   textTransform: 'uppercase', fontFamily: 'sans-serif',
                   color: '#1a1a1a', borderBottom: '1px solid #1a1a1a',
-                  paddingBottom: '2px', transition: 'color 0.3s',
+                  paddingBottom: '2px',
                 }}>
                   Explore →
                 </span>
@@ -152,7 +152,7 @@ const About = () => {
             }}>
               <div style={{ height: '240px', overflow: 'hidden' }}>
                 <img
-                  src="https://images.unsplash.com/photo-1600210492493-0946911123ea?w=800&q=80"
+                  src={images['about.gallery.image2']}
                   alt="Gallery"
                   style={{
                     width: '100%', height: '100%', objectFit: 'cover',

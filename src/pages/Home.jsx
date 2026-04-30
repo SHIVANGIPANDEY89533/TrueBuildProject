@@ -2,13 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatedCounter, MarqueeText, ServiceCard } from '../components';
 import { SERVICES, STUDIO_STORY, PROJECTS } from '../constants/data';
-import img9 from '../assets/images/img9.jpeg';
-import img5 from '../assets/images/img5.jpeg';
-import img6 from '../assets/images/img6.jpeg';
-import img7 from '../assets/images/img7.jpeg';
-import img8 from '../assets/images/img8.jpeg';
+import { useSiteImages } from '../context/SiteImagesContext';
 
-// ── BLACK BOLD BUTTON ──
 const KnowMoreBtn = ({ to, light = false, label = 'Know More' }) => (
   <Link to={to} style={{
     display: 'inline-block', marginTop: '28px',
@@ -18,8 +13,7 @@ const KnowMoreBtn = ({ to, light = false, label = 'Know More' }) => (
     border: `2px solid ${light ? '#fff' : '#1a1a1a'}`,
     fontSize: '0.68rem', letterSpacing: '3px',
     textTransform: 'uppercase', fontFamily: 'sans-serif',
-    fontWeight: '700',
-    transition: 'all 0.3s ease',
+    fontWeight: '700', transition: 'all 0.3s ease',
   }}
     onMouseEnter={e => {
       e.currentTarget.style.background = light ? 'transparent' : '#c9a96e';
@@ -37,11 +31,19 @@ const KnowMoreBtn = ({ to, light = false, label = 'Know More' }) => (
 
 const Home = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const { images, getSectionImages } = useSiteImages(); // ✅
+
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
+
+  // ✅ Dynamic featured images — default + admin added dono
+  const featuredImages = getSectionImages('home').filter(i =>
+    i.key.includes('.featured') || i.key.includes('.gallery') || i.key.includes('.kk') ||
+    (!i.key.includes('.hero') && !i.key.includes('.about'))
+  );
 
   return (
     <main style={{ background: '#faf8f5' }}>
@@ -54,7 +56,7 @@ const Home = () => {
         padding: isMobile ? '50px 24px' : '80px 60px',
         boxSizing: 'border-box',
       }}>
-        <img src={img9} alt="TrueBuild Projects" style={{
+        <img src={images['home.hero.slide1']} alt="TrueBuild Projects" style={{
           position: 'absolute', inset: 0,
           width: '100%', height: '100%',
           objectFit: 'cover', zIndex: 0,
@@ -64,11 +66,6 @@ const Home = () => {
           background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 55%)',
         }} />
         <div style={{ position: 'relative', zIndex: 2 }}>
-          <p style={{
-            color: '#c9a96e', fontSize: '0.68rem',
-            letterSpacing: '6px', textTransform: 'uppercase',
-            marginBottom: '14px', fontFamily: 'sans-serif',
-          }}></p>
           <h1 style={{
             color: '#fff', fontFamily: "'Georgia', serif",
             fontSize: isMobile ? '2rem' : 'clamp(2rem, 5vw, 4.5rem)',
@@ -122,7 +119,7 @@ const Home = () => {
 
       {/* ── SECTION 3: FULL WIDTH IMAGE ── */}
       <section style={{ height: isMobile ? '40vh' : '65vh', overflow: 'hidden' }}>
-        <img src={img5} alt="Interior" style={{
+        <img src={images['home.hero.slide2']} alt="Interior" style={{
           width: '100%', height: '100%',
           objectFit: 'cover', display: 'block',
         }} />
@@ -138,8 +135,7 @@ const Home = () => {
         <h2 style={{
           textAlign: 'center', fontFamily: "'Georgia', serif",
           fontWeight: '300', fontSize: isMobile ? '1.4rem' : '2rem',
-          color: '#1a1a1a', letterSpacing: '3px',
-          marginBottom: '48px',
+          color: '#1a1a1a', letterSpacing: '3px', marginBottom: '48px',
         }}>Our Expertise</h2>
         <div style={{
           display: 'flex', gap: '3px',
@@ -215,12 +211,83 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── SECTION 7: TRUEBUILD SIGNATURE BLOCK ── */}
+      {/* ── SECTION 7: FEATURED IMAGES (Admin Added) ── */}
+      {featuredImages.length > 0 && (
+        <section style={{
+          padding: isMobile ? '60px 24px' : '80px 60px',
+          background: '#fff', boxSizing: 'border-box',
+        }}>
+          <p style={{
+            fontSize: '0.62rem', letterSpacing: '5px',
+            textTransform: 'uppercase', color: '#c9a96e',
+            marginBottom: '12px', fontFamily: 'sans-serif', textAlign: 'center',
+          }}>Featured</p>
+          <h2 style={{
+            textAlign: 'center', fontFamily: "'Georgia', serif",
+            fontWeight: '300', fontSize: isMobile ? '1.4rem' : '2rem',
+            color: '#1a1a1a', letterSpacing: '3px', marginBottom: '40px',
+          }}>
+            Featured Images
+            <span style={{ fontFamily: 'sans-serif', fontSize: '0.75rem',
+              color: '#c9a96e', marginLeft: '12px' }}>
+              ({featuredImages.length})
+            </span>
+          </h2>
+
+          {/* ✅ Grid — admin added saare home.* images yahan show honge */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile
+              ? '1fr'
+              : featuredImages.length === 1
+                ? '1fr'
+                : featuredImages.length === 2
+                  ? '1fr 1fr'
+                  : 'repeat(3, 1fr)',
+            gap: '3px',
+            maxWidth: '1200px', margin: '0 auto',
+          }}>
+            {featuredImages.map((item, idx) => (
+              <div key={item.key} style={{
+                position: 'relative', overflow: 'hidden',
+                height: isMobile ? '240px' : '320px',
+              }}>
+                <img src={item.url} alt={item.label || item.key} style={{
+                  width: '100%', height: '100%',
+                  objectFit: 'cover', display: 'block',
+                  transition: 'transform 0.6s ease',
+                }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.06)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                  onError={e => e.target.style.display = 'none'}
+                />
+                {/* Label badge */}
+                <div style={{
+                  position: 'absolute', bottom: 0, left: 0, right: 0,
+                  background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent)',
+                  padding: '20px 16px 14px',
+                }}>
+                  <p style={{
+                    color: '#fff', fontFamily: 'sans-serif',
+                    fontSize: '0.65rem', letterSpacing: '2px',
+                    textTransform: 'uppercase', margin: 0,
+                    opacity: 0.8,
+                  }}>
+                    {item.label || item.key}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── SECTION 8: SIGNATURE BLOCK ── */}
       <section style={{
         position: 'relative', minHeight: isMobile ? '50vh' : '72vh',
         display: 'flex', alignItems: 'center', overflow: 'hidden',
       }}>
-        <img src={img6} alt="Signature" style={{
+        <img src={images['home.hero.slide3']} alt="Signature" style={{
           position: 'absolute', inset: 0,
           width: '100%', height: '100%', objectFit: 'cover',
         }} />

@@ -111,7 +111,7 @@ const Architectural = () => {
           <div style={{ width: '40px', height: '1px', background: '#c9a96e', marginBottom: '24px' }} />
           <p style={{ fontFamily: "'Georgia', serif", fontSize: '1rem', color: '#555',
             lineHeight: '2', fontWeight: '300', marginBottom: '16px' }}>
-            TrueBuild Projects is crafting a series of luxurious mansions and villas in Abu Dhabi and Dubai, showcasing expertise in both architectural design and interior decoration.
+            TrueBuild Projects is crafting a series of luxurious mansions and villas in Delhi NCR, showcasing expertise in both architectural design and interior decoration.
           </p>
           <p style={{ fontFamily: "'Georgia', serif", fontSize: '1rem', color: '#555',
             lineHeight: '2', fontWeight: '300', marginBottom: '32px' }}>

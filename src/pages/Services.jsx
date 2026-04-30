@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { CONSTRUCTION_PROJECTS } from '../constants/data';
+import { useSiteImages } from '../context/SiteImagesContext';
 
-
-// ✅ Updated SERVICE_CARDS — Construction Services updated
 const SERVICE_CARDS = [
   {
     title:    'Construction Services',
@@ -39,16 +38,22 @@ const SERVICE_CARDS = [
     img:      'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&q=80',
     path:     '/services/interiors',
     tag:      'Interiors',
-    points:   ['Space Planning & 3D Visualization', 'Modular Kitchens & Wardrobes', 'Bespoke Handcrafted Furniture'],
+    // ✅ Updated points here:
+    points:   [
+      'Living Space', 
+      'Luxury Bedroom', 
+      'Modern Washroom', 
+      'Wall Panelling', 
+      'False Ceiling'
+    ],
   },
 ];
-
 
 const Services = () => {
   const [isMobile,   setIsMobile]   = useState(window.innerWidth < 768);
   const [hoveredIdx, setHoveredIdx] = useState(null);
   const [hoveredCon, setHoveredCon] = useState(null);
-
+  const { images } = useSiteImages(); // ✅
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -56,17 +61,14 @@ const Services = () => {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-
   return (
     <main style={{ paddingTop: '80px', minHeight: '100vh', background: '#faf8f5' }}>
 
-
-      {/* ══════════════════════════════════════
-          HERO
-      ══════════════════════════════════════ */}
+      {/* ── HERO ── */}
       <div style={{ position: 'relative', height: isMobile ? '45vh' : '55vh', overflow: 'hidden' }}>
+        {/* ✅ services.hero = img8 */}
         <img
-          src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1600&q=80"
+          src={images['services.hero']}
           alt="TrueBuild Services"
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
         />
@@ -96,32 +98,25 @@ const Services = () => {
           <p style={{
             color: 'rgba(255,255,255,0.65)', fontFamily: "'Georgia', serif",
             fontSize: isMobile ? '0.85rem' : '1rem',
-            fontWeight: '300', lineHeight: '1.8',
-            maxWidth: '560px',
+            fontWeight: '300', lineHeight: '1.8', maxWidth: '560px',
           }}>
             From the first shovel in the ground to the final coat of paint — quality, integrity, and precision.
           </p>
         </div>
       </div>
 
-
-      {/* ══════════════════════════════════════
-          PROMISE STRIP
-      ══════════════════════════════════════ */}
+      {/* ── PROMISE STRIP ── */}
       <div style={{
         background: '#c9a96e',
         padding: isMobile ? '20px 24px' : '18px 60px',
-        display: 'flex',
-        justifyContent: 'center',
-        flexWrap: 'wrap',
-        gap: isMobile ? '12px 24px' : '0',
+        display: 'flex', justifyContent: 'center',
+        flexWrap: 'wrap', gap: isMobile ? '12px 24px' : '0',
       }}>
         {['🏗️ Construction', '⚡ MEP Services', '🎨 Finishing', '🛋️ Interior Design'].map((item, i) => (
           <div key={i} style={{
-            display: 'flex', alignItems: 'center', gap: '0',
+            display: 'flex', alignItems: 'center',
             color: '#fff', fontFamily: 'sans-serif',
-            fontSize: '0.6rem', letterSpacing: '2px',
-            textTransform: 'uppercase',
+            fontSize: '0.6rem', letterSpacing: '2px', textTransform: 'uppercase',
             padding: isMobile ? '0' : '0 32px',
             borderRight: !isMobile && i < 3 ? '1px solid rgba(255,255,255,0.35)' : 'none',
           }}>
@@ -130,10 +125,7 @@ const Services = () => {
         ))}
       </div>
 
-
-      {/* ══════════════════════════════════════
-          SERVICE CARDS GRID
-      ══════════════════════════════════════ */}
+      {/* ── SERVICE CARDS GRID ── */}
       <section style={{
         padding: isMobile ? '50px 20px 60px' : '80px 60px',
         boxSizing: 'border-box',
@@ -151,7 +143,6 @@ const Services = () => {
           <div style={{ width: '40px', height: '1px', background: '#c9a96e', margin: '0 auto' }} />
         </div>
 
-
         <div style={{
           display: 'grid',
           gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
@@ -163,13 +154,9 @@ const Services = () => {
               onMouseLeave={() => setHoveredIdx(null)}>
               <div style={{
                 background: '#fff', overflow: 'hidden',
-                boxShadow: hoveredIdx === idx
-                  ? '0 12px 48px rgba(0,0,0,0.12)'
-                  : '0 2px 16px rgba(0,0,0,0.06)',
-                transition: 'box-shadow 0.3s',
-                height: '100%',
+                boxShadow: hoveredIdx === idx ? '0 12px 48px rgba(0,0,0,0.12)' : '0 2px 16px rgba(0,0,0,0.06)',
+                transition: 'box-shadow 0.3s', height: '100%',
               }}>
-                {/* Image */}
                 <div style={{ height: isMobile ? '220px' : '260px', overflow: 'hidden', position: 'relative' }}>
                   <img src={svc.img} alt={svc.title} style={{
                     width: '100%', height: '100%', objectFit: 'cover',
@@ -186,9 +173,6 @@ const Services = () => {
                     {svc.tag}
                   </span>
                 </div>
-
-
-                {/* Content */}
                 <div style={{ padding: '28px 28px 32px' }}>
                   <p style={{ fontSize: '0.58rem', letterSpacing: '4px',
                     textTransform: 'uppercase', color: '#c9a96e',
@@ -203,25 +187,19 @@ const Services = () => {
                     color: '#888', lineHeight: '1.8', margin: '0 0 18px' }}>
                     {svc.desc}
                   </p>
-
-
-                  {/* ✅ Bullet Points */}
                   <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 22px' }}>
                     {svc.points.map((pt, pi) => (
                       <li key={pi} style={{
                         display: 'flex', alignItems: 'center', gap: '8px',
                         fontFamily: 'sans-serif', fontSize: '0.75rem',
                         color: '#666', padding: '4px 0',
-                        borderBottom: pi < svc.points.length - 1
-                          ? '1px solid #f0ebe3' : 'none',
+                        borderBottom: pi < svc.points.length - 1 ? '1px solid #f0ebe3' : 'none',
                       }}>
                         <span style={{ color: '#c9a96e', fontSize: '0.5rem' }}>◆</span>
                         {pt}
                       </li>
                     ))}
                   </ul>
-
-
                   <span style={{
                     fontSize: '0.62rem', letterSpacing: '3px',
                     textTransform: 'uppercase', fontFamily: 'sans-serif',
@@ -236,10 +214,7 @@ const Services = () => {
         </div>
       </section>
 
-
-      {/* ══════════════════════════════════════
-          TRUBUILD PROMISE SECTION
-      ══════════════════════════════════════ */}
+      {/* ── TRUEBUILD PROMISE ── */}
       <section style={{
         background: '#f5f0ea',
         padding: isMobile ? '60px 24px' : '80px 60px',
@@ -249,10 +224,8 @@ const Services = () => {
           maxWidth: '1100px', margin: '0 auto',
           display: 'grid',
           gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-          gap: isMobile ? '40px' : '80px',
-          alignItems: 'center',
+          gap: isMobile ? '40px' : '80px', alignItems: 'center',
         }}>
-          {/* Left — Text */}
           <div>
             <p style={{ fontSize: '0.6rem', letterSpacing: '5px', textTransform: 'uppercase',
               color: '#c9a96e', marginBottom: '16px', fontFamily: 'sans-serif' }}>
@@ -267,8 +240,7 @@ const Services = () => {
             <p style={{ fontFamily: 'sans-serif', fontSize: '0.85rem', color: '#666',
               lineHeight: '1.9', margin: '0 0 24px' }}>
               We manage every phase of the project, ensuring seamless transitions between
-              structural work and interior finishing. From the first shovel in the ground
-              to the final coat of paint — we deliver quality, integrity, and precision.
+              structural work and interior finishing.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {[
@@ -286,19 +258,12 @@ const Services = () => {
               ))}
             </div>
           </div>
-
-
-          {/* Right — Stat boxes */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '16px',
-          }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             {[
-              { num: '6+',   label: 'Years of Experience'  },
-              { num: '200+', label: 'Projects Delivered'   },
-              { num: '100%', label: 'Client Satisfaction'  },
-              { num: '1',    label: 'Team, Every Phase'    },
+              { num: '6+',   label: 'Years of Experience' },
+              { num: '200+', label: 'Projects Delivered'  },
+              { num: '100%', label: 'Client Satisfaction' },
+              { num: '1',    label: 'Team, Every Phase'   },
             ].map((stat, i) => (
               <div key={i} style={{
                 background: '#fff',
@@ -320,14 +285,10 @@ const Services = () => {
         </div>
       </section>
 
-
-      {/* ══════════════════════════════════════
-          BUILDING CONSTRUCTION GALLERY
-      ══════════════════════════════════════ */}
+      {/* ── BUILDING CONSTRUCTION GALLERY ── */}
       <section style={{
         padding: isMobile ? '60px 24px 70px' : '100px 80px',
-        background: '#1a1a1a',
-        boxSizing: 'border-box',
+        background: '#1a1a1a', boxSizing: 'border-box',
       }}>
         <div style={{ textAlign: 'center', marginBottom: isMobile ? '40px' : '64px' }}>
           <p style={{ fontSize: '0.6rem', letterSpacing: '5px', textTransform: 'uppercase',
@@ -349,8 +310,6 @@ const Services = () => {
           </p>
         </div>
 
-
-        {/* Image Grid */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
@@ -366,8 +325,7 @@ const Services = () => {
                 position: 'relative', overflow: 'hidden',
                 aspectRatio: isMobile ? '4/3' : idx === 0 ? '3/4' : '4/3',
                 cursor: 'default',
-              }}
-            >
+              }}>
               <img
                 src={project.img}
                 alt={project.title}
@@ -416,8 +374,6 @@ const Services = () => {
           ))}
         </div>
 
-
-        {/* Feature Pills */}
         <div style={{
           display: 'flex', gap: '10px', justifyContent: 'center',
           flexWrap: 'wrap', maxWidth: '800px', margin: '0 auto 52px',
@@ -433,7 +389,6 @@ const Services = () => {
           ))}
         </div>
 
-
         <div style={{ textAlign: 'center' }}>
           <Link to="/contact" style={{
             display: 'inline-block', padding: '13px 40px',
@@ -448,10 +403,7 @@ const Services = () => {
         </div>
       </section>
 
-
-      {/* ══════════════════════════════════════
-          BOTTOM CTA
-      ══════════════════════════════════════ */}
+      {/* ── BOTTOM CTA ── */}
       <section style={{
         background: '#f5f0ea',
         padding: isMobile ? '60px 24px' : '80px 60px',
@@ -469,7 +421,6 @@ const Services = () => {
         <p style={{ color: '#888', fontFamily: 'sans-serif', fontSize: '0.85rem',
           lineHeight: '1.9', maxWidth: '480px', margin: '0 auto 32px' }}>
           We handle everything — from architectural planning to the final finishing touch.
-          Let's build something extraordinary together.
         </p>
         <Link to="/contact" style={{
           display: 'inline-block', padding: '14px 40px',
@@ -483,10 +434,8 @@ const Services = () => {
         </Link>
       </section>
 
-
     </main>
   );
 };
-
 
 export default Services;

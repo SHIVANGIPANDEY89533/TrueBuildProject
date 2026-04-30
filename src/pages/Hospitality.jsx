@@ -1,26 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useSiteImages } from '../context/SiteImagesContext';
 
 const BENEFITS = [
-  { icon: '◈', title: 'Creative Spaces',      desc: 'Work with a close-knit team of creative enthusiasts who push boundaries to craft truly exceptional hospitality environments.' },
-  { icon: '◉', title: 'Smart Planning',        desc: 'Time is crucial and we understand it to the tee. We emphasize timely completion — every aspect of your interior, on schedule.' },
+  { icon: '◈', title: 'Creative Spaces',       desc: 'Work with a close-knit team of creative enthusiasts who push boundaries to craft truly exceptional hospitality environments.' },
+  { icon: '◉', title: 'Smart Planning',         desc: 'Time is crucial and we understand it to the tee. We emphasize timely completion — every aspect of your interior, on schedule.' },
   { icon: '◇', title: 'Style & Sophistication', desc: 'Our hospitality projects are a perfect mélange of style and sophistication — spaces guests remember long after they leave.' },
-  { icon: '◎', title: 'Unrivaled Finesse',     desc: 'The execution of a design speaks volumes. We give optimum attention to the finishing and finesse of every hospitality project.' },
+  { icon: '◎', title: 'Unrivaled Finesse',      desc: 'The execution of a design speaks volumes. We give optimum attention to the finishing and finesse of every hospitality project.' },
 ];
 
 const PROJECTS = [
-  { title: 'The Leela — Suite Design',   location: 'Mumbai',   img: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80', type: 'Hotel' },
-  { title: 'Grandmama Café',             location: 'Mumbai',   img: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80', type: 'Café' },
-  { title: 'Art Café — Jio Convention',  location: 'Mumbai',   img: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&q=80', type: 'Café' },
-  { title: 'Luxury Resort Lounge',       location: 'Goa',      img: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80', type: 'Resort' },
-  { title: 'Hotel Lobby — Delhi',        location: 'Delhi',    img: 'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=800&q=80', type: 'Hotel' },
-  { title: 'Private Club — Mumbai',      location: 'Mumbai',   img: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&q=80', type: 'Club' },
+  { title: 'The Leela — Suite Design',  location: 'Mumbai', key: 'hospitality.project1', type: 'Hotel'  },
+  { title: 'Grandmama Café',            location: 'Mumbai', key: 'hospitality.project2', type: 'Café'   },
+  { title: 'Art Café — Jio Convention', location: 'Mumbai', key: 'hospitality.project3', type: 'Café'   },
+  { title: 'Luxury Resort Lounge',      location: 'Goa',    key: 'hospitality.project4', type: 'Resort' },
+  { title: 'Hotel Lobby — Delhi',       location: 'Delhi',  key: 'hospitality.project5', type: 'Hotel'  },
+  { title: 'Private Club — Mumbai',     location: 'Mumbai', key: 'hospitality.project6', type: 'Club'   },
 ];
 
 const Hospitality = () => {
   const [isMobile,   setIsMobile]   = useState(window.innerWidth < 768);
   const [hoveredIdx, setHoveredIdx] = useState(null);
   const [filter,     setFilter]     = useState('All');
+  const { images } = useSiteImages(); // ✅
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -36,7 +38,8 @@ const Hospitality = () => {
 
       {/* ── HERO ── */}
       <div style={{ position: 'relative', height: isMobile ? '50vh' : '65vh', overflow: 'hidden' }}>
-        <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1600&q=80"
+        {/* ✅ hospitality.hero */}
+        <img src={images['hospitality.hero']}
           alt="Hospitality"
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         <div style={{ position: 'absolute', inset: 0,
@@ -109,7 +112,8 @@ const Hospitality = () => {
           </Link>
         </div>
         <div style={{ position: 'relative' }}>
-          <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80"
+          {/* ✅ hospitality.intro */}
+          <img src={images['hospitality.intro']}
             alt="Hospitality interior"
             style={{ width: '100%', height: isMobile ? '300px' : '460px',
               objectFit: 'cover', display: 'block' }} />
@@ -206,7 +210,8 @@ const Hospitality = () => {
               onMouseLeave={() => setHoveredIdx(null)}
               style={{ position: 'relative', overflow: 'hidden',
                 height: isMobile ? '240px' : '300px', cursor: 'pointer' }}>
-              <img src={proj.img} alt={proj.title} style={{
+              {/* ✅ images[proj.key] */}
+              <img src={images[proj.key]} alt={proj.title} style={{
                 width: '100%', height: '100%', objectFit: 'cover', display: 'block',
                 transition: 'transform 0.6s ease',
                 transform: hoveredIdx === idx ? 'scale(1.08)' : 'scale(1)',
@@ -249,11 +254,12 @@ const Hospitality = () => {
         </div>
       </section>
 
-      {/* ── CTA ── */}
+      {/* ── CTA (with background image) ── */}
       <section style={{ position: 'relative', overflow: 'hidden',
         padding: isMobile ? '80px 24px' : '100px 60px', boxSizing: 'border-box' }}>
+        {/* ✅ hospitality.cta */}
         <img
-          src="https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=1600&q=80"
+          src={images['hospitality.cta']}
           alt="CTA"
           style={{ position: 'absolute', inset: 0, width: '100%',
             height: '100%', objectFit: 'cover', zIndex: 0 }}

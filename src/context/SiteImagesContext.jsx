@@ -1,172 +1,151 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
-// ─────────────────────────────────────────────
-// DEFAULT IMAGES — every section of the site
-// Admin can override any of these
-// ─────────────────────────────────────────────
+import img1  from '../assets/images/img1.jpeg';
+import img2  from '../assets/images/img2.jpeg';
+import img3  from '../assets/images/img3.jpeg';
+import img4  from '../assets/images/img4.jpeg';
+import img5  from '../assets/images/img5.jpeg';
+import img6  from '../assets/images/img6.jpeg';
+import img7  from '../assets/images/img7.jpeg';
+import img8  from '../assets/images/img8.jpeg';
+import img9  from '../assets/images/img9.jpeg';
+import img10 from '../assets/images/img10.jpeg';
+import img11 from '../assets/images/img11.jpeg';
+import img12 from '../assets/images/img12.jpeg';
+import img13 from '../assets/images/img13.jpeg';
+
 export const DEFAULT_IMAGES = {
-
-  // ── HOME PAGE
-  'home.hero.slide1':        'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1600&q=80',
-  'home.hero.slide2':        'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=1600&q=80',
-  'home.hero.slide3':        'https://images.unsplash.com/photo-1560448204-603b3fc33ddc?w=1600&q=80',
-  'home.about.image':        'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=800&q=80',
-  'home.featured.project1':  'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80',
-  'home.featured.project2':  'https://images.unsplash.com/photo-1613977257363-707ba9348227?w=800&q=80',
-  'home.featured.project3':  'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80',
-
-  // ── ABOUT PAGE
-  'about.hero':              'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1600&q=80',
-  'about.gauri.portrait':    'https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?w=800&q=80',
-  'about.studio.image':      'https://images.unsplash.com/photo-1600607687939-ce8a6c349c4a?w=800&q=80',
-  'about.gallery.image1':    'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800&q=80',
-  'about.gallery.image2':    'https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=800&q=80',
-  'about.gallery.image3':    'https://images.unsplash.com/photo-1600121848594-d8644e57abab?w=800&q=80',
-  'about.gallery.image4':    'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&q=80',
-
-  // ── SERVICES
-  'services.hero':           'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1600&q=80',
-  'services.architectural':  'https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=800&q=80',
-  'services.residential':    'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&q=80',
-  'services.commercial':     'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80',
-  'services.hospitality':    'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80',
-
-  // ── ARCHITECTURAL PAGE
-  'architectural.hero':      'https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=1600&q=80',
-  'architectural.intro':     'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80',
-  'architectural.project1':  'https://images.unsplash.com/photo-1613977257363-707ba9348227?w=800&q=80',
-  'architectural.project2':  'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80',
-  'architectural.project3':  'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80',
-  'architectural.project4':  'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80',
-
-  // ── RESIDENTIAL PAGE
-  'residential.hero':        'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1600&q=80',
-  'residential.intro':       'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=800&q=80',
-  'residential.project1':    'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&q=80',
-  'residential.project2':    'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&q=80',
-  'residential.project3':    'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800&q=80',
-  'residential.project4':    'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&q=80',
-  'residential.project5':    'https://images.unsplash.com/photo-1560448204-603b3fc33ddc?w=800&q=80',
-  'residential.project6':    'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80',
-
-  // ── COMMERCIAL PAGE
-  'commercial.hero':         'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1600&q=80',
-  'commercial.project1':     'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80',
-  'commercial.project2':     'https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=800&q=80',
-  'commercial.project3':     'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80',
-
-  // ── HOSPITALITY PAGE
-  'hospitality.hero':        'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1600&q=80',
-  'hospitality.project1':    'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80',
-  'hospitality.project2':    'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80',
-  'hospitality.project3':    'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=800&q=80',
-
-  // ── BESPOKE PAGE
-  'bespoke.hero':            'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=1600&q=80',
-  'bespoke.craft1':          'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=600&q=80',
-  'bespoke.craft2':          'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=600&q=80',
-  'bespoke.craft3':          'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&q=80',
-  'bespoke.craft4':          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=600&q=80',
-
-  // ── WALKTHROUGHS
-  'walkthroughs.hero':       'https://images.unsplash.com/photo-1617325247661-675ab4b64ae2?w=1600&q=80',
-  'walkthroughs.thumb1':     'https://images.unsplash.com/photo-1617325247661-675ab4b64ae2?w=800&q=80',
-  'walkthroughs.thumb2':     'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&q=80',
-  'walkthroughs.thumb3':     'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&q=80',
-  'walkthroughs.thumb4':     'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80',
-  'walkthroughs.thumb5':     'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&q=80',
-
-  // ── SHOP PAGE
-  'shop.hero':               'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=1600&q=80',
-  'shop.banner1':            'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=800&q=80',
-  'shop.banner2':            'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=800&q=80',
-
-  // ── CONTACT PAGE
-  'contact.hero':            'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1600&q=80',
+  'home.hero.slide1':        img9,
+  'home.hero.slide2':        img5,
+  'home.hero.slide3':        img6,
+  'home.about.image':        img7,
+  'home.featured.project1':  img1,
+  'home.featured.project2':  img2,
+  'home.featured.project3':  img3,
+  'about.hero':              img10,
+  'about.gauri.portrait':    img11,
+  'about.studio.image':      img12,
+  'about.gallery.image1':    img1,
+  'about.gallery.image2':    img2,
+  'about.gallery.image3':    img3,
+  'about.gallery.image4':    img4,
+  'services.hero':           img8,
+  'services.architectural':  img4,
+  'services.residential':    img9,
+  'services.commercial':     img10,
+  'services.hospitality':    img11,
+  'architectural.hero':      img4,
+  'architectural.intro':     img5,
+  'architectural.project1':  img1,
+  'architectural.project2':  img2,
+  'architectural.project3':  img3,
+  'architectural.project4':  img6,
+  'residential.hero':        img9,
+  'residential.intro':       img7,
+  'residential.project1':    img1,
+  'residential.project2':    img2,
+  'residential.project3':    img3,
+  'residential.project4':    img4,
+  'residential.project5':    img5,
+  'residential.project6':    img6,
+  'commercial.hero':         img10,
+  'commercial.project1':     img8,
+  'commercial.project2':     img11,
+  'commercial.project3':     img12,
+  'hospitality.hero':        img11,
+  'hospitality.project1':    img1,
+  'hospitality.project2':    img2,
+  'hospitality.project3':    img3,
+  'bespoke.hero':            img13,
+  'bespoke.craft1':          img4,
+  'bespoke.craft2':          img5,
+  'bespoke.craft3':          img6,
+  'bespoke.craft4':          img7,
+  'walkthroughs.hero':       img8,
+  'walkthroughs.thumb1':     img1,
+  'walkthroughs.thumb2':     img2,
+  'walkthroughs.thumb3':     img3,
+  'walkthroughs.thumb4':     img4,
+  'walkthroughs.thumb5':     img5,
+  'shop.hero':               img13,
+  'shop.banner1':            img6,
+  'shop.banner2':            img7,
+  'contact.hero':            img8,
 };
 
-// ─────────────────────────────────────────────
-// SECTION LABELS for Admin UI grouping
-// ─────────────────────────────────────────────
 export const IMAGE_SECTIONS = [
-  { key: 'home',           label: '🏠 Home Page'      },
-  { key: 'about',          label: '👤 About Page'      },
-  { key: 'services',       label: '🛠️ Services Hub'   },
-  { key: 'architectural',  label: '🏛️ Architectural'  },
-  { key: 'residential',    label: '🏡 Residential'    },
-  { key: 'commercial',     label: '🏢 Commercial'     },
-  { key: 'hospitality',    label: '🏨 Hospitality'    },
-  { key: 'bespoke',        label: '🪑 Bespoke'        },
-  { key: 'walkthroughs',   label: '⬡ Walkthroughs'   },
-  { key: 'shop',           label: '🛍️ Shop'           },
-  { key: 'contact',        label: '✉ Contact'         },
+  { key: 'home',          label: '🏠 Home Page'     },
+  { key: 'about',         label: '👤 About Page'     },
+  { key: 'services',      label: '🛠️ Services Hub'  },
+  { key: 'architectural', label: '🏛️ Architectural' },
+  { key: 'residential',   label: '🏡 Residential'   },
+  { key: 'commercial',    label: '🏢 Commercial'    },
+  { key: 'hospitality',   label: '🏨 Hospitality'   },
+  { key: 'bespoke',       label: '🪑 Bespoke'       },
+  { key: 'walkthroughs',  label: '⬡ Walkthroughs'  },
+  { key: 'shop',          label: '🛍️ Shop'          },
+  { key: 'contact',       label: '✉ Contact'        },
 ];
 
-// ─────────────────────────────────────────────
-// FRIENDLY LABEL MAP
-// ─────────────────────────────────────────────
 export const IMAGE_LABELS = {
-  'home.hero.slide1':        'Hero Slide 1',
-  'home.hero.slide2':        'Hero Slide 2',
-  'home.hero.slide3':        'Hero Slide 3',
-  'home.about.image':        'About Section Image',
-  'home.featured.project1':  'Featured Project 1',
-  'home.featured.project2':  'Featured Project 2',
-  'home.featured.project3':  'Featured Project 3',
-  'about.hero':              'Hero Banner',
-  'about.gauri.portrait':    'Gauri Khan Portrait',
-  'about.studio.image':      'Studio Image',
-  'about.gallery.image1':    'Gallery Image 1',
-  'about.gallery.image2':    'Gallery Image 2',
-  'about.gallery.image3':    'Gallery Image 3',
-  'about.gallery.image4':    'Gallery Image 4',
-  'services.hero':           'Hero Banner',
-  'services.architectural':  'Architectural Card',
-  'services.residential':    'Residential Card',
-  'services.commercial':     'Commercial Card',
-  'services.hospitality':    'Hospitality Card',
-  'architectural.hero':      'Hero Banner',
-  'architectural.intro':     'Intro Section Image',
-  'architectural.project1':  'Project 1',
-  'architectural.project2':  'Project 2',
-  'architectural.project3':  'Project 3',
-  'architectural.project4':  'Project 4',
-  'residential.hero':        'Hero Banner',
-  'residential.intro':       'Intro Section Image',
-  'residential.project1':    'Project 1',
-  'residential.project2':    'Project 2',
-  'residential.project3':    'Project 3',
-  'residential.project4':    'Project 4',
-  'residential.project5':    'Project 5',
-  'residential.project6':    'Project 6',
-  'commercial.hero':         'Hero Banner',
-  'commercial.project1':     'Project 1',
-  'commercial.project2':     'Project 2',
-  'commercial.project3':     'Project 3',
-  'hospitality.hero':        'Hero Banner',
-  'hospitality.project1':    'Project 1',
-  'hospitality.project2':    'Project 2',
-  'hospitality.project3':    'Project 3',
-  'bespoke.hero':            'Hero Banner',
-  'bespoke.craft1':          'Craft Image 1',
-  'bespoke.craft2':          'Craft Image 2',
-  'bespoke.craft3':          'Craft Image 3',
-  'bespoke.craft4':          'Craft Image 4',
-  'walkthroughs.hero':       'Hero Banner',
-  'walkthroughs.thumb1':     'Lodha Trump Tower Thumb',
-  'walkthroughs.thumb2':     'Karan Johar Thumb',
-  'walkthroughs.thumb3':     'Manish Malhotra Thumb',
-  'walkthroughs.thumb4':     'Manish Store Thumb',
-  'walkthroughs.thumb5':     'Art Cafe Thumb',
-  'shop.hero':               'Hero Banner',
-  'shop.banner1':            'Promo Banner 1',
-  'shop.banner2':            'Promo Banner 2',
-  'contact.hero':            'Hero Banner',
+  'home.hero.slide1':        'Hero Background (img9)',
+  'home.hero.slide2':        'Full Width Section (img5)',
+  'home.hero.slide3':        'Signature Block (img6)',
+  'home.about.image':        'About Section (img7)',
+  'home.featured.project1':  'Featured Project 1 (img1)',
+  'home.featured.project2':  'Featured Project 2 (img2)',
+  'home.featured.project3':  'Featured Project 3 (img3)',
+  'about.hero':              'Hero Banner (img10)',
+  'about.gauri.portrait':    'Portrait (img11)',
+  'about.studio.image':      'Studio Image (img12)',
+  'about.gallery.image1':    'Gallery Image 1 (img1)',
+  'about.gallery.image2':    'Gallery Image 2 (img2)',
+  'about.gallery.image3':    'Gallery Image 3 (img3)',
+  'about.gallery.image4':    'Gallery Image 4 (img4)',
+  'services.hero':           'Hero Banner (img8)',
+  'services.architectural':  'Architectural Card (img4)',
+  'services.residential':    'Residential Card (img9)',
+  'services.commercial':     'Commercial Card (img10)',
+  'services.hospitality':    'Hospitality Card (img11)',
+  'architectural.hero':      'Hero Banner (img4)',
+  'architectural.intro':     'Intro Image (img5)',
+  'architectural.project1':  'Project 1 (img1)',
+  'architectural.project2':  'Project 2 (img2)',
+  'architectural.project3':  'Project 3 (img3)',
+  'architectural.project4':  'Project 4 (img6)',
+  'residential.hero':        'Hero Banner (img9)',
+  'residential.intro':       'Intro Image (img7)',
+  'residential.project1':    'Project 1 (img1)',
+  'residential.project2':    'Project 2 (img2)',
+  'residential.project3':    'Project 3 (img3)',
+  'residential.project4':    'Project 4 (img4)',
+  'residential.project5':    'Project 5 (img5)',
+  'residential.project6':    'Project 6 (img6)',
+  'commercial.hero':         'Hero Banner (img10)',
+  'commercial.project1':     'Project 1 (img8)',
+  'commercial.project2':     'Project 2 (img11)',
+  'commercial.project3':     'Project 3 (img12)',
+  'hospitality.hero':        'Hero Banner (img11)',
+  'hospitality.project1':    'Project 1 (img1)',
+  'hospitality.project2':    'Project 2 (img2)',
+  'hospitality.project3':    'Project 3 (img3)',
+  'bespoke.hero':            'Hero Banner (img13)',
+  'bespoke.craft1':          'Craft Image 1 (img4)',
+  'bespoke.craft2':          'Craft Image 2 (img5)',
+  'bespoke.craft3':          'Craft Image 3 (img6)',
+  'bespoke.craft4':          'Craft Image 4 (img7)',
+  'walkthroughs.hero':       'Hero Banner (img8)',
+  'walkthroughs.thumb1':     'Thumbnail 1 (img1)',
+  'walkthroughs.thumb2':     'Thumbnail 2 (img2)',
+  'walkthroughs.thumb3':     'Thumbnail 3 (img3)',
+  'walkthroughs.thumb4':     'Thumbnail 4 (img4)',
+  'walkthroughs.thumb5':     'Thumbnail 5 (img5)',
+  'shop.hero':               'Hero Banner (img13)',
+  'shop.banner1':            'Promo Banner 1 (img6)',
+  'shop.banner2':            'Promo Banner 2 (img7)',
+  'contact.hero':            'Hero Banner (img8)',
 };
 
-// ─────────────────────────────────────────────
-// CONTEXT
-// ─────────────────────────────────────────────
 const SiteImagesContext = createContext();
 
 export const SiteImagesProvider = ({ children }) => {
@@ -179,46 +158,104 @@ export const SiteImagesProvider = ({ children }) => {
     }
   });
 
-  // Update a single image key
+  const [extraKeys, setExtraKeys] = useState(() => {
+    try {
+      const saved = localStorage.getItem('gkd_extra_image_keys');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
+  const saveOverrides = (updated) => {
+    const overrides = {};
+    Object.keys(updated).forEach(k => {
+      if (updated[k] !== DEFAULT_IMAGES[k]) overrides[k] = updated[k];
+    });
+    localStorage.setItem('gkd_site_images', JSON.stringify(overrides));
+  };
+
   const updateImage = (key, url) => {
     setImages(prev => {
       const updated = { ...prev, [key]: url };
-      // Save only overrides (not defaults) to localStorage
-      const overrides = {};
-      Object.keys(updated).forEach(k => {
-        if (updated[k] !== DEFAULT_IMAGES[k]) overrides[k] = updated[k];
-      });
-      localStorage.setItem('gkd_site_images', JSON.stringify(overrides));
+      saveOverrides(updated);
       return updated;
     });
   };
 
-  // Reset a single image to default
+  const addImage = (key, url, label = '') => {
+    if (!key || !url) return;
+    setImages(prev => {
+      const updated = { ...prev, [key]: url };
+      saveOverrides(updated);
+      return updated;
+    });
+    setExtraKeys(prev => {
+      const newExtra = prev.find(e => e.key === key)
+        ? prev.map(e => e.key === key ? { key, label: label || key } : e)
+        : [...prev, { key, label: label || key }];
+      localStorage.setItem('gkd_extra_image_keys', JSON.stringify(newExtra));
+      return newExtra;
+    });
+  };
+
+  const removeExtraImage = (key) => {
+    setImages(prev => {
+      const updated = { ...prev };
+      delete updated[key];
+      saveOverrides(updated);
+      return updated;
+    });
+    setExtraKeys(prev => {
+      const newExtra = prev.filter(e => e.key !== key);
+      localStorage.setItem('gkd_extra_image_keys', JSON.stringify(newExtra));
+      return newExtra;
+    });
+  };
+
   const resetImage = (key) => {
     setImages(prev => {
       const updated = { ...prev, [key]: DEFAULT_IMAGES[key] };
-      const overrides = {};
-      Object.keys(updated).forEach(k => {
-        if (updated[k] !== DEFAULT_IMAGES[k]) overrides[k] = updated[k];
-      });
-      localStorage.setItem('gkd_site_images', JSON.stringify(overrides));
+      saveOverrides(updated);
       return updated;
     });
   };
 
-  // Reset ALL images to defaults
   const resetAll = () => {
     setImages({ ...DEFAULT_IMAGES });
     localStorage.removeItem('gkd_site_images');
   };
 
-  // Count overridden images
+  // ✅ KEY FUNCTION — section ki saari images (default + admin added)
+  const getSectionImages = (sectionKey) => {
+    const defaultKeys = Object.keys(DEFAULT_IMAGES).filter(k =>
+      k.startsWith(sectionKey + '.')
+    );
+    const extraSectionKeys = extraKeys
+      .filter(e => e.key.startsWith(sectionKey + '.'))
+      .map(e => e.key);
+    const allKeys = [...new Set([...defaultKeys, ...extraSectionKeys])];
+    return allKeys.map(key => ({
+      key,
+      url:   images[key],
+      label: IMAGE_LABELS[key] || key,
+    }));
+  };
+
   const overrideCount = Object.keys(images).filter(
     k => images[k] !== DEFAULT_IMAGES[k]
   ).length;
 
   return (
-    <SiteImagesContext.Provider value={{ images, updateImage, resetImage, resetAll, overrideCount }}>
+    <SiteImagesContext.Provider value={{
+      images,
+      updateImage,
+      resetImage,
+      resetAll,
+      overrideCount,
+      addImage,
+      removeExtraImage,
+      extraKeys,
+      getSectionImages, // ✅ NEW
+    }}>
       {children}
     </SiteImagesContext.Provider>
   );

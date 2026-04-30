@@ -9,26 +9,37 @@ import {
   DEFAULT_IMAGES,
 } from '../context/SiteImagesContext';
 
-
-
 const EMPTY_FORM = {
   name: '', price: '', category: 'Artefacts',
   img: '', desc: '',
 };
 
 // ─────────────────────────────────────────────
-// IMAGE MANAGER (sub-component)
+// IMAGE MANAGER
 // ─────────────────────────────────────────────
 const ImageManager = () => {
-  const { images, updateImage, resetImage, resetAll, overrideCount } = useSiteImages();
-  const [activeSection, setActiveSection] = useState(IMAGE_SECTIONS[0].key);
-  const [editingKey,    setEditingKey]    = useState(null);
-  const [urlInput,      setUrlInput]      = useState('');
-  const [previewUrl,    setPreviewUrl]    = useState('');
-  const [uploadMode,    setUploadMode]    = useState('url');
-  const [searchQuery,   setSearchQuery]   = useState('');
-  const [savedKey,      setSavedKey]      = useState(null);
-  const [isMobile,      setIsMobile]      = useState(window.innerWidth < 768);
+  const {
+    images, updateImage, resetImage, resetAll,
+    overrideCount, addImage, removeExtraImage, extraKeys,
+  } = useSiteImages();
+
+  const [activeSection,  setActiveSection]  = useState(IMAGE_SECTIONS[0].key);
+  const [editingKey,     setEditingKey]      = useState(null);
+  const [urlInput,       setUrlInput]        = useState('');
+  const [previewUrl,     setPreviewUrl]      = useState('');
+  const [uploadMode,     setUploadMode]      = useState('url');
+  const [searchQuery,    setSearchQuery]     = useState('');
+  const [savedKey,       setSavedKey]        = useState(null);
+  const [isMobile,       setIsMobile]        = useState(window.innerWidth < 768);
+  const [showAddForm,    setShowAddForm]      = useState(false);   // ✅ NEW
+  const [addSection,     setAddSection]       = useState(IMAGE_SECTIONS[0].key); // ✅ NEW
+  const [addCustomKey,   setAddCustomKey]     = useState('');      // ✅ NEW
+  const [addLabel,       setAddLabel]         = useState('');      // ✅ NEW
+  const [addUrl,         setAddUrl]           = useState('');      // ✅ NEW
+  const [addPreview,     setAddPreview]       = useState('');      // ✅ NEW
+  const [addUploadMode,  setAddUploadMode]    = useState('url');   // ✅ NEW
+  const [addSuccess,     setAddSuccess]       = useState(false);   // ✅ NEW
+  const addFileRef = useRef(null);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -37,18 +48,30 @@ const ImageManager = () => {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const sectionKeys = Object.keys(images).filter(k =>
+  // Default keys for active section
+  const defaultSectionKeys = Object.keys(images).filter(k =>
     k.startsWith(activeSection + '.') &&
-    (searchQuery === '' ||
-      (IMAGE_LABELS[k] || k).toLowerCase().includes(searchQuery.toLowerCase()))
+    DEFAULT_IMAGES.hasOwnProperty(k) &&
+    (searchQuery === '' || (IMAGE_LABELS[k] || k).toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  // ✅ Extra (custom) keys for active section
+  const extraSectionKeys = extraKeys
+    .filter(e =>
+      e.key.startsWith(activeSection + '.') &&
+      (searchQuery === '' || e.label.toLowerCase().includes(searchQuery.toLowerCase()))
+    )
+    .map(e => e.key);
+
+  const sectionKeys = [...defaultSectionKeys, ...extraSectionKeys];
+
   const isOverridden = (key) => images[key] !== DEFAULT_IMAGES[key];
+  const isExtra      = (key) => !DEFAULT_IMAGES.hasOwnProperty(key);
 
   const openEditor = (key) => {
     setEditingKey(key);
-    setUrlInput(images[key]);
-    setPreviewUrl(images[key]);
+    setUrlInput(images[key] || '');
+    setPreviewUrl(images[key] || '');
     setUploadMode('url');
   };
 
@@ -61,10 +84,7 @@ const ImageManager = () => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      setPreviewUrl(ev.target.result);
-      setUrlInput(ev.target.result);
-    };
+    reader.onload = (ev) => { setPreviewUrl(ev.target.result); setUrlInput(ev.target.result); };
     reader.readAsDataURL(file);
   };
 
@@ -76,10 +96,32 @@ const ImageManager = () => {
     setEditingKey(null);
   };
 
+  // ✅ NEW — Add image handler
+  const handleAddImage = () => {
+    if (!addUrl) return alert('Image URL ya file select karo!');
+    const finalKey = `${addSection}.${addCustomKey.trim() || 'custom' + Date.now()}`;
+    const finalLabel = addLabel.trim() || finalKey;
+    addImage(finalKey, addUrl, finalLabel);
+    setAddSuccess(true);
+    setTimeout(() => {
+      setAddSuccess(false);
+      setShowAddForm(false);
+      setAddCustomKey(''); setAddLabel(''); setAddUrl(''); setAddPreview('');
+      setActiveSection(addSection); // ✅ us section par jump karo jahan add kiya
+    }, 1500);
+  };
+
+  const handleAddFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => { setAddPreview(ev.target.result); setAddUrl(ev.target.result); };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div style={{
-      display: 'flex', gap: '0', minHeight: '600px',
-      background: '#faf8f5',
+      display: 'flex', minHeight: '600px', background: '#faf8f5',
       flexDirection: isMobile ? 'column' : 'row',
     }}>
 
@@ -89,7 +131,6 @@ const ImageManager = () => {
         flexShrink: 0, background: '#1a1a1a',
         overflowY: isMobile ? 'visible' : 'auto',
       }}>
-        {/* Override counter */}
         <div style={{ padding: '20px 18px 12px' }}>
           <p style={{ fontFamily: 'sans-serif', fontSize: '0.55rem',
             letterSpacing: '3px', textTransform: 'uppercase',
@@ -104,7 +145,6 @@ const ImageManager = () => {
           </p>
         </div>
 
-        {/* Section buttons */}
         <div style={{ display: isMobile ? 'flex' : 'block',
           flexWrap: 'wrap', gap: '2px', padding: isMobile ? '0 12px 12px' : '0' }}>
           {IMAGE_SECTIONS.map(sec => {
@@ -117,8 +157,7 @@ const ImageManager = () => {
                 alignItems: 'center', justifyContent: 'space-between',
                 width: isMobile ? 'auto' : '100%',
                 textAlign: 'left', padding: '12px 18px',
-                background: activeSection === sec.key
-                  ? 'rgba(201,169,110,0.15)' : 'transparent',
+                background: activeSection === sec.key ? 'rgba(201,169,110,0.15)' : 'transparent',
                 border: isMobile
                   ? activeSection === sec.key ? '1px solid #c9a96e' : '1px solid rgba(255,255,255,0.1)'
                   : 'none',
@@ -127,8 +166,7 @@ const ImageManager = () => {
                   : undefined,
                 color: activeSection === sec.key ? '#fff' : 'rgba(255,255,255,0.5)',
                 fontSize: '0.7rem', fontFamily: 'sans-serif',
-                cursor: 'pointer', transition: 'all 0.2s',
-                whiteSpace: 'nowrap',
+                cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap',
               }}>
                 <span>{sec.label}</span>
                 {secOverrides > 0 && (
@@ -145,11 +183,9 @@ const ImageManager = () => {
           })}
         </div>
 
-        {/* Reset All */}
         <div style={{ padding: '14px 16px' }}>
           <button onClick={() => {
-            if (window.confirm('Reset ALL site images to defaults? This cannot be undone.'))
-              resetAll();
+            if (window.confirm('Reset ALL site images to defaults?')) resetAll();
           }} style={{
             width: '100%', padding: '10px',
             background: 'rgba(231,76,60,0.12)',
@@ -157,7 +193,6 @@ const ImageManager = () => {
             color: '#e74c3c', cursor: 'pointer',
             fontSize: '0.6rem', letterSpacing: '2px',
             textTransform: 'uppercase', fontFamily: 'sans-serif',
-            transition: 'all 0.2s',
           }}
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(231,76,60,0.25)'}
             onMouseLeave={e => e.currentTarget.style.background = 'rgba(231,76,60,0.12)'}>
@@ -166,12 +201,12 @@ const ImageManager = () => {
         </div>
       </div>
 
-      {/* ── GRID PANEL ── */}
+      {/* ── MAIN PANEL ── */}
       <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+
         {/* Header row */}
         <div style={{ display: 'flex', justifyContent: 'space-between',
-          alignItems: 'center', marginBottom: '20px',
-          flexWrap: 'wrap', gap: '12px' }}>
+          alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
           <h3 style={{ fontFamily: "'Georgia', serif", fontSize: '1.2rem',
             fontWeight: '300', color: '#1a1a1a', margin: 0 }}>
             {IMAGE_SECTIONS.find(s => s.key === activeSection)?.label}
@@ -180,16 +215,31 @@ const ImageManager = () => {
               ({sectionKeys.length} images)
             </span>
           </h3>
-          <input
-            placeholder="🔍 Search images..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            style={{
-              padding: '8px 14px', border: '1px solid #e8e3db',
-              outline: 'none', fontSize: '0.8rem',
-              fontFamily: 'sans-serif', width: '200px', background: '#fff',
+
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <input
+              placeholder="🔍 Search images..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              style={{
+                padding: '8px 14px', border: '1px solid #e8e3db',
+                outline: 'none', fontSize: '0.8rem',
+                fontFamily: 'sans-serif', width: '180px', background: '#fff',
+              }}
+            />
+            {/* ✅ ADD IMAGE BUTTON */}
+            <button onClick={() => { setShowAddForm(true); setAddSection(activeSection); }} style={{
+              padding: '9px 20px', background: '#c9a96e', color: '#fff',
+              border: 'none', cursor: 'pointer',
+              fontSize: '0.65rem', letterSpacing: '2px',
+              textTransform: 'uppercase', fontFamily: 'sans-serif',
+              transition: 'background 0.2s',
             }}
-          />
+              onMouseEnter={e => e.currentTarget.style.background = '#1a1a1a'}
+              onMouseLeave={e => e.currentTarget.style.background = '#c9a96e'}>
+              + Add Image
+            </button>
+          </div>
         </div>
 
         {/* Image Cards Grid */}
@@ -201,50 +251,50 @@ const ImageManager = () => {
           {sectionKeys.map(key => (
             <div key={key} style={{
               background: '#fff', overflow: 'hidden',
-              boxShadow: isOverridden(key)
-                ? '0 0 0 2px #c9a96e'
-                : savedKey === key
-                  ? '0 0 0 2px #2ecc71'
-                  : '0 2px 12px rgba(0,0,0,0.06)',
+              boxShadow: isExtra(key)
+                ? '0 0 0 2px #3498db'
+                : isOverridden(key)
+                  ? '0 0 0 2px #c9a96e'
+                  : savedKey === key
+                    ? '0 0 0 2px #2ecc71'
+                    : '0 2px 12px rgba(0,0,0,0.06)',
               transition: 'box-shadow 0.3s',
             }}>
-              {/* Image thumbnail */}
-              <div style={{ position: 'relative', height: '130px', overflow: 'hidden',
-                background: '#f5f0ea' }}>
+              <div style={{ position: 'relative', height: '130px', overflow: 'hidden', background: '#f5f0ea' }}>
                 <img
                   src={images[key]}
                   alt={IMAGE_LABELS[key] || key}
-                  style={{ width: '100%', height: '100%',
-                    objectFit: 'cover', display: 'block' }}
-                  onError={e => {
-                    e.target.src = 'https://via.placeholder.com/400x300/f5f0ea/bbb?text=No+Image';
-                  }}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  onError={e => { e.target.src = 'https://via.placeholder.com/400x300/f5f0ea/bbb?text=No+Image'; }}
                 />
-                {/* Badges */}
-                {isOverridden(key) && (
+                {/* Badge */}
+                {isExtra(key) && (
+                  <span style={{
+                    position: 'absolute', top: '7px', right: '7px',
+                    background: '#3498db', color: '#fff',
+                    fontSize: '0.48rem', padding: '2px 7px',
+                    letterSpacing: '1px', textTransform: 'uppercase', fontFamily: 'sans-serif',
+                  }}>New</span>
+                )}
+                {!isExtra(key) && isOverridden(key) && (
                   <span style={{
                     position: 'absolute', top: '7px', right: '7px',
                     background: '#c9a96e', color: '#fff',
                     fontSize: '0.48rem', padding: '2px 7px',
-                    letterSpacing: '1px', textTransform: 'uppercase',
-                    fontFamily: 'sans-serif',
-                  }}>
-                    Custom
-                  </span>
+                    letterSpacing: '1px', textTransform: 'uppercase', fontFamily: 'sans-serif',
+                  }}>Custom</span>
                 )}
                 {savedKey === key && (
                   <div style={{
                     position: 'absolute', inset: 0,
                     background: 'rgba(46,204,113,0.35)',
-                    display: 'flex', alignItems: 'center',
-                    justifyContent: 'center',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <span style={{ fontSize: '2rem' }}>✓</span>
                   </div>
                 )}
               </div>
 
-              {/* Info */}
               <div style={{ padding: '10px 12px 12px' }}>
                 <p style={{ fontFamily: 'sans-serif', fontSize: '0.68rem',
                   color: '#1a1a1a', margin: '0 0 3px', fontWeight: '500',
@@ -258,63 +308,243 @@ const ImageManager = () => {
                 </p>
                 <div style={{ display: 'flex', gap: '6px' }}>
                   <button onClick={() => openEditor(key)} style={{
-                    flex: 1, padding: '7px',
-                    background: '#1a1a1a', color: '#fff',
+                    flex: 1, padding: '7px', background: '#1a1a1a', color: '#fff',
                     border: 'none', cursor: 'pointer',
                     fontSize: '0.58rem', letterSpacing: '1px',
                     textTransform: 'uppercase', fontFamily: 'sans-serif',
-                    transition: 'background 0.2s',
                   }}
                     onMouseEnter={e => e.target.style.background = '#c9a96e'}
                     onMouseLeave={e => e.target.style.background = '#1a1a1a'}>
                     ✎ Edit
                   </button>
-                  {isOverridden(key) && (
-                    <button onClick={() => resetImage(key)} title="Reset to default"
-                      style={{
-                        padding: '7px 10px', background: 'transparent',
-                        border: '1px solid #f0e0e0', color: '#e74c3c',
-                        cursor: 'pointer', fontSize: '0.7rem', fontFamily: 'sans-serif',
-                        transition: 'all 0.2s',
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.background='#e74c3c'; e.currentTarget.style.color='#fff'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='#e74c3c'; }}>
+                  {/* ✅ Extra image ko delete kar sakte hain */}
+                  {isExtra(key) ? (
+                    <button onClick={() => {
+                      if (window.confirm('Is image ko remove karo?')) removeExtraImage(key);
+                    }} style={{
+                      padding: '7px 10px', background: 'transparent',
+                      border: '1px solid #f0e0e0', color: '#e74c3c',
+                      cursor: 'pointer', fontSize: '0.7rem', fontFamily: 'sans-serif',
+                    }}
+                      onMouseEnter={e => { e.currentTarget.style.background = '#e74c3c'; e.currentTarget.style.color = '#fff'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#e74c3c'; }}>
+                      ✕
+                    </button>
+                  ) : isOverridden(key) ? (
+                    <button onClick={() => resetImage(key)} title="Reset to default" style={{
+                      padding: '7px 10px', background: 'transparent',
+                      border: '1px solid #f0e0e0', color: '#e74c3c',
+                      cursor: 'pointer', fontSize: '0.7rem', fontFamily: 'sans-serif',
+                    }}
+                      onMouseEnter={e => { e.currentTarget.style.background = '#e74c3c'; e.currentTarget.style.color = '#fff'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#e74c3c'; }}>
                       ↺
                     </button>
-                  )}
+                  ) : null}
                 </div>
               </div>
             </div>
           ))}
 
           {sectionKeys.length === 0 && (
-            <div style={{ gridColumn: '1/-1', textAlign: 'center',
-              padding: '60px 20px' }}>
+            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px 20px' }}>
               <p style={{ color: '#bbb', fontFamily: 'sans-serif', fontSize: '0.85rem' }}>
-                No images match "{searchQuery}"
+                {searchQuery ? `No images match "${searchQuery}"` : 'No images in this section'}
               </p>
-              <button onClick={() => setSearchQuery('')} style={{
-                marginTop: '12px', padding: '8px 20px',
-                background: '#1a1a1a', color: '#fff', border: 'none',
-                cursor: 'pointer', fontSize: '0.6rem', letterSpacing: '2px',
-                textTransform: 'uppercase', fontFamily: 'sans-serif',
-              }}>
-                Clear Search
-              </button>
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} style={{
+                  marginTop: '12px', padding: '8px 20px',
+                  background: '#1a1a1a', color: '#fff', border: 'none',
+                  cursor: 'pointer', fontSize: '0.6rem', letterSpacing: '2px',
+                  textTransform: 'uppercase', fontFamily: 'sans-serif',
+                }}>
+                  Clear Search
+                </button>
+              )}
             </div>
           )}
         </div>
       </div>
 
       {/* ══════════════════════════════════════
-          EDIT IMAGE MODAL
+          ✅ ADD IMAGE MODAL
+      ══════════════════════════════════════ */}
+      {showAddForm && (
+        <>
+          <div onClick={() => setShowAddForm(false)} style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(0,0,0,0.65)', zIndex: 4000, backdropFilter: 'blur(4px)',
+          }} />
+          <div style={{
+            position: 'fixed', top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            background: '#fff', zIndex: 4001,
+            width: '100%', maxWidth: '560px',
+            maxHeight: '90vh', overflowY: 'auto',
+            padding: '36px', boxSizing: 'border-box',
+            boxShadow: '0 24px 80px rgba(0,0,0,0.25)',
+            margin: '0 16px',
+          }}>
+            <button onClick={() => setShowAddForm(false)} style={{
+              position: 'absolute', top: '16px', right: '20px',
+              background: 'none', border: 'none',
+              fontSize: '1.3rem', cursor: 'pointer', color: '#bbb',
+            }}>✕</button>
+
+            <p style={{ fontSize: '0.56rem', letterSpacing: '4px',
+              textTransform: 'uppercase', color: '#c9a96e',
+              marginBottom: '5px', fontFamily: 'sans-serif' }}>
+              Add New Image
+            </p>
+            <h3 style={{ fontFamily: "'Georgia', serif", fontSize: '1.3rem',
+              fontWeight: '300', color: '#1a1a1a', margin: '0 0 24px' }}>
+              Kisi bhi section mein image add karo
+            </h3>
+
+            {/* Section select */}
+            <label style={labelStyle}>Section choose karo</label>
+            <select value={addSection} onChange={e => setAddSection(e.target.value)} style={{ ...inputStyle, marginBottom: '16px', cursor: 'pointer' }}>
+              {IMAGE_SECTIONS.map(s => (
+                <option key={s.key} value={s.key}>{s.label}</option>
+              ))}
+            </select>
+
+            {/* Custom key name */}
+            <label style={labelStyle}>Image key name (e.g. project7, banner3)</label>
+            <input
+              value={addCustomKey}
+              onChange={e => setAddCustomKey(e.target.value.replace(/\s/g, '_'))}
+              placeholder={`${addSection}.project7`}
+              style={{ ...inputStyle, marginBottom: '4px' }}
+            />
+            <p style={{ fontFamily: 'sans-serif', fontSize: '0.6rem',
+              color: '#bbb', margin: '0 0 16px' }}>
+              Final key: <code style={{ background: '#f5f0ea', padding: '2px 6px' }}>
+                {addSection}.{addCustomKey || 'custom_name'}
+              </code>
+            </p>
+
+            {/* Label (display name) */}
+            <label style={labelStyle}>Display label (optional)</label>
+            <input
+              value={addLabel}
+              onChange={e => setAddLabel(e.target.value)}
+              placeholder="e.g. New Project Image 7"
+              style={{ ...inputStyle, marginBottom: '20px' }}
+            />
+
+            {/* Upload mode toggle */}
+            <div style={{ display: 'flex', gap: '2px', marginBottom: '16px' }}>
+              {[
+                { key: 'url',    label: '🔗 Paste URL'   },
+                { key: 'upload', label: '📁 Upload File' },
+              ].map(m => (
+                <button key={m.key} onClick={() => setAddUploadMode(m.key)} style={{
+                  flex: 1, padding: '10px',
+                  background: addUploadMode === m.key ? '#1a1a1a' : '#f5f0ea',
+                  color:      addUploadMode === m.key ? '#fff'    : '#888',
+                  border: 'none', cursor: 'pointer',
+                  fontSize: '0.65rem', letterSpacing: '1.5px',
+                  textTransform: 'uppercase', fontFamily: 'sans-serif',
+                }}>
+                  {m.label}
+                </button>
+              ))}
+            </div>
+
+            {/* URL input */}
+            {addUploadMode === 'url' && (
+              <div style={{ marginBottom: '16px' }}>
+                <input
+                  value={addUrl.startsWith('data:') ? '' : addUrl}
+                  onChange={e => { setAddUrl(e.target.value); setAddPreview(e.target.value); }}
+                  placeholder="https://images.unsplash.com/..."
+                  style={inputStyle}
+                />
+              </div>
+            )}
+
+            {/* File upload */}
+            {addUploadMode === 'upload' && (
+              <div style={{ marginBottom: '16px' }}>
+                <input ref={addFileRef} type="file" accept="image/*"
+                  onChange={handleAddFileUpload} style={{ display: 'none' }} />
+                <div onClick={() => addFileRef.current.click()} style={{
+                  border: '2px dashed #e8e3db', padding: '28px 20px',
+                  textAlign: 'center', cursor: 'pointer', background: '#fdfcfb',
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#c9a96e'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#e8e3db'; }}>
+                  <p style={{ fontSize: '1.8rem', margin: '0 0 8px' }}>📁</p>
+                  <p style={{ fontFamily: 'sans-serif', fontSize: '0.8rem', color: '#888', margin: 0 }}>
+                    Click to select image from your device
+                  </p>
+                </div>
+                {addUrl.startsWith('data:') && (
+                  <p style={{ fontFamily: 'sans-serif', fontSize: '0.7rem', color: '#2ecc71', marginTop: '8px' }}>
+                    ✓ File loaded
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Preview */}
+            {addPreview && (
+              <div style={{ marginBottom: '20px' }}>
+                <p style={labelStyle}>Preview</p>
+                <img src={addPreview} alt="preview"
+                  style={{ width: '100%', height: '160px', objectFit: 'cover', display: 'block' }}
+                  onError={e => e.target.style.display = 'none'}
+                />
+              </div>
+            )}
+
+            {/* Success message */}
+            {addSuccess && (
+              <div style={{
+                background: '#f0faf0', border: '1px solid #c3e6cb',
+                padding: '12px 16px', marginBottom: '16px',
+                fontSize: '0.82rem', color: '#2d6a4f', fontFamily: 'sans-serif',
+              }}>
+                ✓ Image successfully add ho gayi!
+              </div>
+            )}
+
+            {/* Buttons */}
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={handleAddImage} style={{
+                flex: 1, padding: '13px',
+                background: addUrl ? '#c9a96e' : '#e0d8d0',
+                color: '#fff', border: 'none',
+                cursor: addUrl ? 'pointer' : 'not-allowed',
+                fontSize: '0.65rem', letterSpacing: '3px',
+                textTransform: 'uppercase', fontFamily: 'sans-serif',
+              }}
+                onMouseEnter={e => { if (addUrl) e.target.style.background = '#1a1a1a'; }}
+                onMouseLeave={e => { if (addUrl) e.target.style.background = '#c9a96e'; }}>
+                ✓ Add Image
+              </button>
+              <button onClick={() => setShowAddForm(false)} style={{
+                padding: '13px 16px', background: 'transparent',
+                border: '1px solid #e8e3db', color: '#888',
+                cursor: 'pointer', fontSize: '0.6rem', letterSpacing: '1.5px',
+                textTransform: 'uppercase', fontFamily: 'sans-serif',
+              }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ══════════════════════════════════════
+          EDIT IMAGE MODAL (same as before)
       ══════════════════════════════════════ */}
       {editingKey && (
         <>
           <div onClick={() => setEditingKey(null)} style={{
             position: 'fixed', inset: 0,
-            background: 'rgba(0,0,0,0.65)',
-            zIndex: 4000, backdropFilter: 'blur(4px)',
+            background: 'rgba(0,0,0,0.65)', zIndex: 4000, backdropFilter: 'blur(4px)',
           }} />
           <div style={{
             position: 'fixed', top: '50%', left: '50%',
@@ -326,7 +556,6 @@ const ImageManager = () => {
             boxShadow: '0 24px 80px rgba(0,0,0,0.25)',
             margin: '0 16px',
           }}>
-            {/* Close */}
             <button onClick={() => setEditingKey(null)} style={{
               position: 'absolute', top: '16px', right: '20px',
               background: 'none', border: 'none',
@@ -344,38 +573,35 @@ const ImageManager = () => {
             </h3>
             <p style={{ fontFamily: 'sans-serif', fontSize: '0.62rem',
               color: '#bbb', margin: '0 0 22px' }}>
-              <code style={{ background: '#f5f0ea', padding: '2px 8px' }}>
-                {editingKey}
-              </code>
+              <code style={{ background: '#f5f0ea', padding: '2px 8px' }}>{editingKey}</code>
             </p>
 
-            {/* Before / After preview */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr',
-              gap: '10px', marginBottom: '22px' }}>
+            {/* Before / After */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '22px' }}>
               <div>
                 <p style={{ fontFamily: 'sans-serif', fontSize: '0.56rem',
-                  letterSpacing: '2px', textTransform: 'uppercase',
-                  color: '#bbb', margin: '0 0 6px' }}>Current</p>
-                <img src={DEFAULT_IMAGES[editingKey]} alt="Default"
+                  letterSpacing: '2px', textTransform: 'uppercase', color: '#bbb', margin: '0 0 6px' }}>
+                  Current
+                </p>
+                <img src={DEFAULT_IMAGES[editingKey] || images[editingKey]} alt="Default"
                   style={{ width: '100%', height: '110px', objectFit: 'cover', display: 'block' }}
                   onError={e => e.target.style.display = 'none'}
                 />
               </div>
               <div>
                 <p style={{ fontFamily: 'sans-serif', fontSize: '0.56rem',
-                  letterSpacing: '2px', textTransform: 'uppercase',
-                  color: '#c9a96e', margin: '0 0 6px' }}>New Preview</p>
+                  letterSpacing: '2px', textTransform: 'uppercase', color: '#c9a96e', margin: '0 0 6px' }}>
+                  New Preview
+                </p>
                 {previewUrl ? (
                   <img src={previewUrl} alt="New"
                     style={{ width: '100%', height: '110px', objectFit: 'cover', display: 'block' }}
-                    onError={e => { e.target.style.display='none'; }}
+                    onError={e => e.target.style.display = 'none'}
                   />
                 ) : (
-                  <div style={{ width: '100%', height: '110px',
-                    background: '#f5f0ea', display: 'flex',
-                    alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ color: '#ccc', fontSize: '0.7rem',
-                      fontFamily: 'sans-serif' }}>No preview</span>
+                  <div style={{ width: '100%', height: '110px', background: '#f5f0ea',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ color: '#ccc', fontSize: '0.7rem', fontFamily: 'sans-serif' }}>No preview</span>
                   </div>
                 )}
               </div>
@@ -400,7 +626,6 @@ const ImageManager = () => {
               ))}
             </div>
 
-            {/* URL input */}
             {uploadMode === 'url' && (
               <div style={{ marginBottom: '20px' }}>
                 <label style={labelStyle}>Image URL</label>
@@ -408,53 +633,41 @@ const ImageManager = () => {
                   value={urlInput.startsWith('data:') ? '' : urlInput}
                   onChange={e => handleUrlChange(e.target.value)}
                   placeholder="https://images.unsplash.com/..."
-                  style={inputStyle}
-                  autoFocus
+                  style={inputStyle} autoFocus
                 />
                 <p style={{ fontFamily: 'sans-serif', fontSize: '0.62rem',
                   color: '#bbb', marginTop: '6px', lineHeight: '1.7' }}>
-                  Tip: Use Unsplash, Cloudinary, imgbb.com or any direct .jpg/.png/.webp URL
+                  Tip: Unsplash, Cloudinary, imgbb.com ya koi bhi direct image URL
                 </p>
               </div>
             )}
 
-            {/* File upload */}
             {uploadMode === 'upload' && (
               <div style={{ marginBottom: '20px' }}>
                 <input ref={fileInputRef} type="file" accept="image/*"
                   onChange={handleFileUpload} style={{ display: 'none' }} />
                 <div onClick={() => fileInputRef.current.click()} style={{
                   border: '2px dashed #e8e3db', padding: '36px 20px',
-                  textAlign: 'center', cursor: 'pointer',
-                  background: '#fdfcfb', transition: 'all 0.2s',
+                  textAlign: 'center', cursor: 'pointer', background: '#fdfcfb',
                 }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor='#c9a96e'; e.currentTarget.style.background='#fffdf8'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor='#e8e3db'; e.currentTarget.style.background='#fdfcfb'; }}>
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#c9a96e'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#e8e3db'; }}>
                   <p style={{ fontSize: '2rem', margin: '0 0 10px' }}>📁</p>
-                  <p style={{ fontFamily: 'sans-serif', fontSize: '0.8rem',
-                    color: '#888', margin: '0 0 6px' }}>
+                  <p style={{ fontFamily: 'sans-serif', fontSize: '0.8rem', color: '#888', margin: '0 0 6px' }}>
                     Click to select image from your computer
                   </p>
-                  <p style={{ fontFamily: 'sans-serif', fontSize: '0.62rem',
-                    color: '#bbb', margin: 0 }}>
+                  <p style={{ fontFamily: 'sans-serif', fontSize: '0.62rem', color: '#bbb', margin: 0 }}>
                     JPG, PNG, WEBP supported
                   </p>
                 </div>
                 {urlInput.startsWith('data:') && (
-                  <p style={{ fontFamily: 'sans-serif', fontSize: '0.7rem',
-                    color: '#2ecc71', marginTop: '8px' }}>
+                  <p style={{ fontFamily: 'sans-serif', fontSize: '0.7rem', color: '#2ecc71', marginTop: '8px' }}>
                     ✓ File loaded — click Save to apply
                   </p>
                 )}
-                <p style={{ fontFamily: 'sans-serif', fontSize: '0.6rem',
-                  color: '#e74c3c', marginTop: '8px' }}>
-                  ⚠ Uploaded files are stored in browser only.
-                  Use a Cloudinary URL for permanent cloud storage.
-                </p>
               </div>
             )}
 
-            {/* Action buttons */}
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={handleSave} disabled={!urlInput} style={{
                 flex: 1, padding: '13px',
@@ -463,23 +676,23 @@ const ImageManager = () => {
                 cursor: urlInput ? 'pointer' : 'not-allowed',
                 fontSize: '0.65rem', letterSpacing: '3px',
                 textTransform: 'uppercase', fontFamily: 'sans-serif',
-                transition: 'background 0.3s',
               }}
-                onMouseEnter={e => { if (urlInput) e.target.style.background='#1a1a1a'; }}
-                onMouseLeave={e => { if (urlInput) e.target.style.background='#c9a96e'; }}>
+                onMouseEnter={e => { if (urlInput) e.target.style.background = '#1a1a1a'; }}
+                onMouseLeave={e => { if (urlInput) e.target.style.background = '#c9a96e'; }}>
                 ✓ Save Image
               </button>
-              <button onClick={() => { resetImage(editingKey); setEditingKey(null); }} style={{
-                padding: '13px 16px', background: 'transparent',
-                border: '1px solid #f0e0e0', color: '#e74c3c',
-                cursor: 'pointer', fontSize: '0.6rem', letterSpacing: '1.5px',
-                textTransform: 'uppercase', fontFamily: 'sans-serif',
-                transition: 'all 0.2s',
-              }}
-                onMouseEnter={e => { e.currentTarget.style.background='#e74c3c'; e.currentTarget.style.color='#fff'; }}
-                onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='#e74c3c'; }}>
-                ↺ Reset
-              </button>
+              {!isExtra(editingKey) && (
+                <button onClick={() => { resetImage(editingKey); setEditingKey(null); }} style={{
+                  padding: '13px 16px', background: 'transparent',
+                  border: '1px solid #f0e0e0', color: '#e74c3c',
+                  cursor: 'pointer', fontSize: '0.6rem', letterSpacing: '1.5px',
+                  textTransform: 'uppercase', fontFamily: 'sans-serif',
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#e74c3c'; e.currentTarget.style.color = '#fff'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#e74c3c'; }}>
+                  ↺ Reset
+                </button>
+              )}
               <button onClick={() => setEditingKey(null)} style={{
                 padding: '13px 16px', background: 'transparent',
                 border: '1px solid #e8e3db', color: '#888',
@@ -560,16 +773,11 @@ const AdminPanel = () => {
 
   const startCamera = async () => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }, audio: false,
-      });
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
       setStream(mediaStream);
       setCameraOn(true);
       setTimeout(() => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
-          videoRef.current.play();
-        }
+        if (videoRef.current) { videoRef.current.srcObject = mediaStream; videoRef.current.play(); }
       }, 100);
     } catch { alert('Camera access denied or not available.'); }
   };
@@ -592,9 +800,7 @@ const AdminPanel = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.name || !form.price || !form.img) {
-      alert('Please fill Name, Price and add an Image'); return;
-    }
+    if (!form.name || !form.price || !form.img) { alert('Please fill Name, Price and add an Image'); return; }
     const product = { ...form, price: Number(form.price), id: editingId || Date.now() };
     let updated;
     if (editingId) {
@@ -611,8 +817,7 @@ const AdminPanel = () => {
   };
 
   const handleEdit = (product) => {
-    setForm({ name: product.name, price: product.price,
-      category: product.category, img: product.img, desc: product.desc || '' });
+    setForm({ name: product.name, price: product.price, category: product.category, img: product.img, desc: product.desc || '' });
     setPreviewImg(product.img);
     setEditingId(product.id);
     setActiveTab('add');
@@ -628,64 +833,56 @@ const AdminPanel = () => {
 
   const handleLogout = () => { logout(); navigate('/'); };
 
-  // ── ALL TABS DEFINITION ──
   const TABS = [
-    { key: 'add',     label: editingId ? '✎ Edit Product' : '+ Add Product' },
-    { key: 'manage',  label: `📦 Manage (${products.length})`                },
-    { key: 'images',  label: '🖼️ Image Manager'                              }, // ✅ NEW
+    { key: 'add',    label: editingId ? '✎ Edit Product' : '+ Add Product' },
+    { key: 'manage', label: `📦 Manage (${products.length})`                },
+    { key: 'images', label: '🖼️ Image Manager'                              },
   ];
 
   return (
     <div style={{ minHeight: '100vh', background: '#faf8f5', paddingTop: '80px' }}>
 
-      {/* ── TOP BAR ── */}
+      {/* TOP BAR */}
       <div style={{
         background: '#1a1a1a', padding: '16px 40px',
         display: 'flex', justifyContent: 'space-between',
         alignItems: 'center', flexWrap: 'wrap', gap: '12px',
       }}>
         <div>
-          <p style={{ color: '#c9a96e', fontSize: '0.6rem',
-            letterSpacing: '4px', textTransform: 'uppercase',
-            margin: 0, fontFamily: 'sans-serif' }}>
+          <p style={{ color: '#c9a96e', fontSize: '0.6rem', letterSpacing: '4px',
+            textTransform: 'uppercase', margin: 0, fontFamily: 'sans-serif' }}>
             Admin Dashboard
           </p>
           <h3 style={{ color: '#fff', fontFamily: "'Georgia', serif",
-            fontWeight: '300', fontSize: '1.1rem',
-            margin: '4px 0 0', letterSpacing: '2px' }}>
+            fontWeight: '300', fontSize: '1.1rem', margin: '4px 0 0', letterSpacing: '2px' }}>
             TrueBuild Projects
           </h3>
         </div>
         <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{ textAlign: 'center' }}>
             <p style={{ color: '#888', fontSize: '0.55rem', fontFamily: 'sans-serif',
-              letterSpacing: '2px', textTransform: 'uppercase', margin: '0 0 2px' }}>
-              Products
-            </p>
-            <p style={{ color: '#fff', fontFamily: "'Georgia', serif",
-              fontSize: '1.1rem', margin: 0 }}>
+              letterSpacing: '2px', textTransform: 'uppercase', margin: '0 0 2px' }}>Products</p>
+            <p style={{ color: '#fff', fontFamily: "'Georgia', serif", fontSize: '1.1rem', margin: 0 }}>
               {products.length}
             </p>
           </div>
           <button onClick={handleLogout} style={{
-            background: 'none', border: '1px solid #444',
-            color: '#aaa', padding: '8px 16px', cursor: 'pointer',
-            fontSize: '0.62rem', letterSpacing: '2px',
-            textTransform: 'uppercase', fontFamily: 'sans-serif',
-            transition: 'all 0.2s',
+            background: 'none', border: '1px solid #444', color: '#aaa',
+            padding: '8px 16px', cursor: 'pointer', fontSize: '0.62rem',
+            letterSpacing: '2px', textTransform: 'uppercase', fontFamily: 'sans-serif',
           }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor='#e74c3c'; e.currentTarget.style.color='#e74c3c'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor='#444'; e.currentTarget.style.color='#aaa'; }}>
+            onMouseEnter={e => { e.currentTarget.style.borderColor = '#e74c3c'; e.currentTarget.style.color = '#e74c3c'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = '#444'; e.currentTarget.style.color = '#aaa'; }}>
             Logout
           </button>
         </div>
       </div>
 
-      <div style={{ padding: isMobile ? '28px 16px' : '36px 40px',
+      <div style={{
+        padding: isMobile ? '28px 16px' : '36px 40px',
         maxWidth: activeTab === 'images' ? '100%' : '1100px',
-        margin: '0 auto' }}>
-
-        {/* Success message */}
+        margin: '0 auto',
+      }}>
         {successMsg && (
           <div style={{
             background: '#f0faf0', border: '1px solid #c3e6cb',
@@ -696,9 +893,8 @@ const AdminPanel = () => {
           </div>
         )}
 
-        {/* ── TABS ── */}
-        <div style={{ display: 'flex', gap: '2px', marginBottom: '32px',
-          flexWrap: 'wrap' }}>
+        {/* TABS */}
+        <div style={{ display: 'flex', gap: '2px', marginBottom: '32px', flexWrap: 'wrap' }}>
           {TABS.map(tab => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
               padding: '12px 24px',
@@ -710,49 +906,35 @@ const AdminPanel = () => {
               letterSpacing: '2px', textTransform: 'uppercase',
               fontFamily: 'sans-serif', transition: 'all 0.2s',
             }}
-              onMouseEnter={e => { if (activeTab !== tab.key) { e.currentTarget.style.borderColor='#c9a96e'; e.currentTarget.style.color='#c9a96e'; } }}
-              onMouseLeave={e => { if (activeTab !== tab.key) { e.currentTarget.style.borderColor='#ddd'; e.currentTarget.style.color='#888'; } }}>
+              onMouseEnter={e => { if (activeTab !== tab.key) { e.currentTarget.style.borderColor = '#c9a96e'; e.currentTarget.style.color = '#c9a96e'; } }}
+              onMouseLeave={e => { if (activeTab !== tab.key) { e.currentTarget.style.borderColor = '#ddd'; e.currentTarget.style.color = '#888'; } }}>
               {tab.label}
             </button>
           ))}
         </div>
 
-        {/* ══════════════════════════════
-            TAB 1 — ADD / EDIT PRODUCT
-        ══════════════════════════════ */}
+        {/* TAB 1 — ADD/EDIT PRODUCT */}
         {activeTab === 'add' && (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-            gap: '40px',
-          }}>
-            {/* Form */}
-            <div style={{ background: '#fff', padding: '32px',
-              boxShadow: '0 2px 16px rgba(0,0,0,0.04)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '40px' }}>
+            <div style={{ background: '#fff', padding: '32px', boxShadow: '0 2px 16px rgba(0,0,0,0.04)' }}>
               <h3 style={{ fontFamily: "'Georgia', serif", fontWeight: '300',
-                fontSize: '1.3rem', color: '#1a1a1a',
-                margin: '0 0 28px', letterSpacing: '2px' }}>
+                fontSize: '1.3rem', color: '#1a1a1a', margin: '0 0 28px', letterSpacing: '2px' }}>
                 {editingId ? 'Edit Product' : 'Add New Product'}
               </h3>
               <form onSubmit={handleSubmit}>
                 <div style={{ marginBottom: '20px' }}>
                   <label style={labelStyle}>Product Name *</label>
-                  <input value={form.name}
-                    onChange={e => handleChange('name', e.target.value)}
-                    placeholder="e.g. Amber Glow Table Lamp"
-                    style={inputStyle} required />
+                  <input value={form.name} onChange={e => handleChange('name', e.target.value)}
+                    placeholder="e.g. Amber Glow Table Lamp" style={inputStyle} required />
                 </div>
                 <div style={{ marginBottom: '20px' }}>
                   <label style={labelStyle}>Price (₹) *</label>
-                  <input type="number" value={form.price}
-                    onChange={e => handleChange('price', e.target.value)}
-                    placeholder="e.g. 12500"
-                    style={inputStyle} min="1" required />
+                  <input type="number" value={form.price} onChange={e => handleChange('price', e.target.value)}
+                    placeholder="e.g. 12500" style={inputStyle} min="1" required />
                 </div>
                 <div style={{ marginBottom: '20px' }}>
                   <label style={labelStyle}>Category *</label>
-                  <select value={form.category}
-                    onChange={e => handleChange('category', e.target.value)}
+                  <select value={form.category} onChange={e => handleChange('category', e.target.value)}
                     style={{ ...inputStyle, cursor: 'pointer' }}>
                     {SHOP_CATEGORIES.filter(c => c !== 'All').map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
@@ -760,7 +942,6 @@ const AdminPanel = () => {
                   </select>
                 </div>
 
-                {/* Image section */}
                 <div style={{ marginBottom: '24px' }}>
                   <label style={labelStyle}>Product Image *</label>
                   <div style={{ display: 'flex', gap: '2px', marginBottom: '16px' }}>
@@ -769,53 +950,44 @@ const AdminPanel = () => {
                       { key: 'camera', icon: '📷', label: 'Camera' },
                       { key: 'url',    icon: '🔗', label: 'URL'    },
                     ].map(t => (
-                      <button key={t.key} type="button"
-                        onClick={() => setImgTab(t.key)} style={{
-                          flex: 1, padding: '10px 6px',
-                          background: imgTab === t.key ? '#1a1a1a' : '#f5f0ea',
-                          color:      imgTab === t.key ? '#fff'    : '#888',
-                          border: 'none', cursor: 'pointer',
-                          fontSize: '0.65rem', letterSpacing: '1.5px',
-                          textTransform: 'uppercase', fontFamily: 'sans-serif',
-                          transition: 'all 0.2s',
-                        }}>
+                      <button key={t.key} type="button" onClick={() => setImgTab(t.key)} style={{
+                        flex: 1, padding: '10px 6px',
+                        background: imgTab === t.key ? '#1a1a1a' : '#f5f0ea',
+                        color:      imgTab === t.key ? '#fff'    : '#888',
+                        border: 'none', cursor: 'pointer',
+                        fontSize: '0.65rem', letterSpacing: '1.5px',
+                        textTransform: 'uppercase', fontFamily: 'sans-serif',
+                      }}>
                         {t.icon} {t.label}
                       </button>
                     ))}
                   </div>
 
-                  {/* Upload */}
                   {imgTab === 'upload' && (
                     <div>
-                      <input ref={fileRef} type="file" accept="image/*"
-                        onChange={handleFileUpload} style={{ display: 'none' }} />
+                      <input ref={fileRef} type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
                       <div onClick={() => fileRef.current.click()} style={{
                         border: '2px dashed #ddd', padding: '32px 20px',
-                        textAlign: 'center', cursor: 'pointer',
-                        background: '#fdfcfb', transition: 'all 0.2s',
+                        textAlign: 'center', cursor: 'pointer', background: '#fdfcfb',
                       }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor='#c9a96e'; e.currentTarget.style.background='#fffdf8'; }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor='#ddd'; e.currentTarget.style.background='#fdfcfb'; }}>
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = '#c9a96e'; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = '#ddd'; }}>
                         <p style={{ fontSize: '2rem', margin: '0 0 10px' }}>📁</p>
-                        <p style={{ fontFamily: 'sans-serif', fontSize: '0.82rem',
-                          color: '#888', margin: '0 0 6px' }}>
+                        <p style={{ fontFamily: 'sans-serif', fontSize: '0.82rem', color: '#888', margin: '0 0 6px' }}>
                           Click to browse from your <strong>Gallery / PC</strong>
                         </p>
-                        <p style={{ fontFamily: 'sans-serif', fontSize: '0.68rem',
-                          color: '#bbb', margin: 0 }}>
+                        <p style={{ fontFamily: 'sans-serif', fontSize: '0.68rem', color: '#bbb', margin: 0 }}>
                           JPG, PNG, WEBP supported
                         </p>
                       </div>
                       {previewImg && imgTab === 'upload' && (
-                        <p style={{ marginTop: '8px', fontSize: '0.72rem',
-                          color: '#2d6a4f', fontFamily: 'sans-serif' }}>
+                        <p style={{ marginTop: '8px', fontSize: '0.72rem', color: '#2d6a4f', fontFamily: 'sans-serif' }}>
                           ✓ Image selected
                         </p>
                       )}
                     </div>
                   )}
 
-                  {/* Camera */}
                   {imgTab === 'camera' && (
                     <div style={{ textAlign: 'center' }}>
                       {!cameraOn ? (
@@ -835,23 +1007,20 @@ const AdminPanel = () => {
                       ) : (
                         <div>
                           <video ref={videoRef} autoPlay playsInline style={{
-                            width: '100%', maxHeight: '260px',
-                            objectFit: 'cover', background: '#000', display: 'block',
+                            width: '100%', maxHeight: '260px', objectFit: 'cover', background: '#000', display: 'block',
                           }} />
                           <canvas ref={canvasRef} style={{ display: 'none' }} />
                           <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                             <button type="button" onClick={capturePhoto} style={{
-                              flex: 1, padding: '12px', background: '#c9a96e',
-                              color: '#fff', border: 'none', cursor: 'pointer',
-                              fontSize: '0.68rem', letterSpacing: '2px',
-                              textTransform: 'uppercase', fontFamily: 'sans-serif',
+                              flex: 1, padding: '12px', background: '#c9a96e', color: '#fff',
+                              border: 'none', cursor: 'pointer', fontSize: '0.68rem',
+                              letterSpacing: '2px', textTransform: 'uppercase', fontFamily: 'sans-serif',
                             }}>
                               📸 Capture
                             </button>
                             <button type="button" onClick={stopCamera} style={{
-                              padding: '12px 16px', background: 'none',
-                              border: '1px solid #ddd', cursor: 'pointer',
-                              color: '#888', fontFamily: 'sans-serif', fontSize: '0.68rem',
+                              padding: '12px 16px', background: 'none', border: '1px solid #ddd',
+                              cursor: 'pointer', color: '#888', fontFamily: 'sans-serif', fontSize: '0.68rem',
                             }}>
                               Cancel
                             </button>
@@ -859,25 +1028,19 @@ const AdminPanel = () => {
                         </div>
                       )}
                       {previewImg && !cameraOn && (
-                        <p style={{ marginTop: '8px', fontSize: '0.72rem',
-                          color: '#2d6a4f', fontFamily: 'sans-serif' }}>
+                        <p style={{ marginTop: '8px', fontSize: '0.72rem', color: '#2d6a4f', fontFamily: 'sans-serif' }}>
                           ✓ Photo captured
                         </p>
                       )}
                     </div>
                   )}
 
-                  {/* URL */}
                   {imgTab === 'url' && (
                     <div>
-                      <input
-                        value={form.img.startsWith('data:') ? '' : form.img}
+                      <input value={form.img.startsWith('data:') ? '' : form.img}
                         onChange={e => handleChange('img', e.target.value)}
-                        placeholder="https://images.unsplash.com/..."
-                        style={inputStyle}
-                      />
-                      <p style={{ fontSize: '0.65rem', color: '#bbb',
-                        fontFamily: 'sans-serif', margin: '8px 0 0', lineHeight: '1.7' }}>
+                        placeholder="https://images.unsplash.com/..." style={inputStyle} />
+                      <p style={{ fontSize: '0.65rem', color: '#bbb', fontFamily: 'sans-serif', margin: '8px 0 0', lineHeight: '1.7' }}>
                         Paste from Unsplash, Google Images or imgbb.com
                       </p>
                     </div>
@@ -886,35 +1049,27 @@ const AdminPanel = () => {
 
                 <div style={{ marginBottom: '28px' }}>
                   <label style={labelStyle}>Description</label>
-                  <textarea value={form.desc}
-                    onChange={e => handleChange('desc', e.target.value)}
-                    placeholder="Short product description..."
-                    rows={3}
-                    style={{ ...inputStyle, resize: 'vertical', minHeight: '80px', lineHeight: '1.6' }}
-                  />
+                  <textarea value={form.desc} onChange={e => handleChange('desc', e.target.value)}
+                    placeholder="Short product description..." rows={3}
+                    style={{ ...inputStyle, resize: 'vertical', minHeight: '80px', lineHeight: '1.6' }} />
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <button type="submit" style={{
-                    flex: 1, padding: '14px', background: '#1a1a1a',
-                    color: '#fff', border: 'none', cursor: 'pointer',
-                    fontSize: '0.68rem', letterSpacing: '3px',
-                    textTransform: 'uppercase', fontFamily: 'sans-serif',
-                    transition: 'background 0.3s',
+                    flex: 1, padding: '14px', background: '#1a1a1a', color: '#fff',
+                    border: 'none', cursor: 'pointer', fontSize: '0.68rem',
+                    letterSpacing: '3px', textTransform: 'uppercase', fontFamily: 'sans-serif',
                   }}
                     onMouseEnter={e => e.target.style.background = '#c9a96e'}
                     onMouseLeave={e => e.target.style.background = '#1a1a1a'}>
                     {editingId ? 'Update Product' : 'Add to Shop'}
                   </button>
                   {editingId && (
-                    <button type="button"
-                      onClick={() => { setForm(EMPTY_FORM); setPreviewImg(''); setEditingId(null); }}
-                      style={{
-                        padding: '14px 20px', background: 'none',
-                        border: '1px solid #ddd', cursor: 'pointer',
-                        fontSize: '0.68rem', letterSpacing: '2px',
-                        textTransform: 'uppercase', fontFamily: 'sans-serif', color: '#888',
-                      }}>
+                    <button type="button" onClick={() => { setForm(EMPTY_FORM); setPreviewImg(''); setEditingId(null); }} style={{
+                      padding: '14px 20px', background: 'none', border: '1px solid #ddd',
+                      cursor: 'pointer', fontSize: '0.68rem', letterSpacing: '2px',
+                      textTransform: 'uppercase', fontFamily: 'sans-serif', color: '#888',
+                    }}>
                       Cancel
                     </button>
                   )}
@@ -925,22 +1080,17 @@ const AdminPanel = () => {
             {/* Live Preview */}
             <div>
               <h4 style={{ fontFamily: 'sans-serif', fontSize: '0.65rem',
-                letterSpacing: '3px', textTransform: 'uppercase',
-                color: '#bbb', marginBottom: '16px' }}>
+                letterSpacing: '3px', textTransform: 'uppercase', color: '#bbb', marginBottom: '16px' }}>
                 Live Preview
               </h4>
-              <div style={{ background: '#fff', overflow: 'hidden',
-                boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
+              <div style={{ background: '#fff', overflow: 'hidden', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
                 <div style={{ height: '260px', background: '#f5f0ea',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  overflow: 'hidden' }}>
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                   {previewImg ? (
-                    <img src={previewImg} alt="Preview"
-                      onError={e => { e.target.style.display='none'; }}
+                    <img src={previewImg} alt="Preview" onError={e => e.target.style.display = 'none'}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
-                    <p style={{ color: '#ccc', fontSize: '0.78rem',
-                      fontFamily: 'sans-serif', letterSpacing: '2px' }}>
+                    <p style={{ color: '#ccc', fontSize: '0.78rem', fontFamily: 'sans-serif', letterSpacing: '2px' }}>
                       Image preview
                     </p>
                   )}
@@ -953,8 +1103,7 @@ const AdminPanel = () => {
                     </span>
                   )}
                   <h3 style={{ fontFamily: "'Georgia', serif", fontSize: '1rem',
-                    fontWeight: '300', color: form.name ? '#1a1a1a' : '#ccc',
-                    margin: '8px 0 6px' }}>
+                    fontWeight: '300', color: form.name ? '#1a1a1a' : '#ccc', margin: '8px 0 6px' }}>
                     {form.name || 'Product Name'}
                   </h3>
                   <p style={{ fontSize: '0.75rem', color: '#aaa', margin: '0 0 12px',
@@ -962,12 +1111,11 @@ const AdminPanel = () => {
                     {form.desc || 'Product description will appear here'}
                   </p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontFamily: "'Georgia', serif",
-                      fontSize: '1.05rem', color: '#1a1a1a' }}>
+                    <span style={{ fontFamily: "'Georgia', serif", fontSize: '1.05rem', color: '#1a1a1a' }}>
                       {form.price ? `₹${Number(form.price).toLocaleString('en-IN')}` : '₹0'}
                     </span>
-                    <span style={{ padding: '8px 14px', background: '#1a1a1a',
-                      color: '#fff', fontSize: '0.58rem', letterSpacing: '1.5px',
+                    <span style={{ padding: '8px 14px', background: '#1a1a1a', color: '#fff',
+                      fontSize: '0.58rem', letterSpacing: '1.5px',
                       textTransform: 'uppercase', fontFamily: 'sans-serif' }}>
                       + Add
                     </span>
@@ -978,23 +1126,19 @@ const AdminPanel = () => {
           </div>
         )}
 
-        {/* ══════════════════════════════
-            TAB 2 — MANAGE PRODUCTS
-        ══════════════════════════════ */}
+        {/* TAB 2 — MANAGE PRODUCTS */}
         {activeTab === 'manage' && (
           <div>
             {products.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '60px 20px' }}>
                 <p style={{ fontSize: '3rem', marginBottom: '16px' }}>📦</p>
-                <p style={{ color: '#bbb', fontFamily: "'Georgia', serif",
-                  fontSize: '1.1rem', letterSpacing: '2px' }}>
+                <p style={{ color: '#bbb', fontFamily: "'Georgia', serif", fontSize: '1.1rem', letterSpacing: '2px' }}>
                   No products added yet.
                 </p>
                 <button onClick={() => setActiveTab('add')} style={{
-                  marginTop: '20px', padding: '12px 28px',
-                  background: '#1a1a1a', color: '#fff', border: 'none',
-                  cursor: 'pointer', fontSize: '0.65rem', letterSpacing: '3px',
-                  textTransform: 'uppercase', fontFamily: 'sans-serif',
+                  marginTop: '20px', padding: '12px 28px', background: '#1a1a1a',
+                  color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.65rem',
+                  letterSpacing: '3px', textTransform: 'uppercase', fontFamily: 'sans-serif',
                 }}>
                   + Add First Product
                 </button>
@@ -1016,9 +1160,8 @@ const AdminPanel = () => {
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       <span style={{
                         position: 'absolute', top: '10px', left: '10px',
-                        background: 'rgba(201,169,110,0.9)',
-                        padding: '3px 8px', fontSize: '0.55rem',
-                        letterSpacing: '1.5px', textTransform: 'uppercase',
+                        background: 'rgba(201,169,110,0.9)', padding: '3px 8px',
+                        fontSize: '0.55rem', letterSpacing: '1.5px', textTransform: 'uppercase',
                         color: '#fff', fontFamily: 'sans-serif',
                       }}>
                         {product.category}
@@ -1029,8 +1172,7 @@ const AdminPanel = () => {
                         fontSize: '0.95rem', color: '#1a1a1a', margin: '0 0 6px' }}>
                         {product.name}
                       </h4>
-                      <p style={{ fontFamily: "'Georgia', serif", fontSize: '1rem',
-                        color: '#c9a96e', margin: '0 0 14px' }}>
+                      <p style={{ fontFamily: "'Georgia', serif", fontSize: '1rem', color: '#c9a96e', margin: '0 0 14px' }}>
                         ₹{product.price.toLocaleString('en-IN')}
                       </p>
                       <div style={{ display: 'flex', gap: '8px' }}>
@@ -1039,10 +1181,9 @@ const AdminPanel = () => {
                           border: '1px solid #1a1a1a', cursor: 'pointer',
                           fontSize: '0.62rem', letterSpacing: '2px',
                           textTransform: 'uppercase', fontFamily: 'sans-serif', color: '#1a1a1a',
-                          transition: 'all 0.2s',
                         }}
-                          onMouseEnter={e => { e.currentTarget.style.background='#1a1a1a'; e.currentTarget.style.color='#fff'; }}
-                          onMouseLeave={e => { e.currentTarget.style.background='none'; e.currentTarget.style.color='#1a1a1a'; }}>
+                          onMouseEnter={e => { e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.color = '#fff'; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#1a1a1a'; }}>
                           ✎ Edit
                         </button>
                         <button onClick={() => handleDelete(product.id)} style={{
@@ -1050,10 +1191,9 @@ const AdminPanel = () => {
                           border: '1px solid #e74c3c', cursor: 'pointer',
                           fontSize: '0.62rem', letterSpacing: '2px',
                           textTransform: 'uppercase', fontFamily: 'sans-serif', color: '#e74c3c',
-                          transition: 'all 0.2s',
                         }}
-                          onMouseEnter={e => { e.currentTarget.style.background='#e74c3c'; e.currentTarget.style.color='#fff'; }}
-                          onMouseLeave={e => { e.currentTarget.style.background='none'; e.currentTarget.style.color='#e74c3c'; }}>
+                          onMouseEnter={e => { e.currentTarget.style.background = '#e74c3c'; e.currentTarget.style.color = '#fff'; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#e74c3c'; }}>
                           ✕ Delete
                         </button>
                       </div>
@@ -1065,9 +1205,7 @@ const AdminPanel = () => {
           </div>
         )}
 
-        {/* ══════════════════════════════
-            TAB 3 — IMAGE MANAGER ✅ NEW
-        ══════════════════════════════ */}
+        {/* TAB 3 — IMAGE MANAGER */}
         {activeTab === 'images' && <ImageManager />}
 
       </div>
@@ -1075,7 +1213,6 @@ const AdminPanel = () => {
   );
 };
 
-// Shared styles
 const labelStyle = {
   display: 'block', fontSize: '0.62rem',
   letterSpacing: '2px', textTransform: 'uppercase',

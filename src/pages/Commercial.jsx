@@ -1,23 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useSiteImages } from '../context/SiteImagesContext';
 
-const PROJECTS = [
-  { title: 'Manish Malhotra — Dubai Mall',        location: 'Dubai, UAE',         img: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80', category: 'Retail' },
-  { title: 'Manish Malhotra — Jio World Plaza',   location: 'Mumbai',             img: 'https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=800&q=80', category: 'Retail' },
-  { title: 'Bollyglow',                           location: 'Mumbai',             img: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&q=80', category: 'Beauty' },
-  { title: 'Grandmama Café',                      location: 'Mumbai',             img: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80', category: 'F&B' },
-  { title: 'Art Café — Jio Convention Center',    location: 'Mumbai',             img: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&q=80', category: 'F&B' },
-  { title: 'Falguni Shane Peacock Store',         location: 'Mumbai & Delhi',     img: 'https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=800&q=80', category: 'Retail' },
-  { title: 'Radio Show Project',                  location: 'Mumbai',             img: 'https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=800&q=80', category: 'Media' },
-  { title: 'Manish Malhotra Dubai Store',         location: 'Dubai, UAE',         img: 'https://images.unsplash.com/photo-1576176539998-0237d1ac6a46?w=800&q=80', category: 'Retail' },
-];
-
-const CATEGORIES = ['All', 'Retail', 'F&B', 'Beauty', 'Media'];
+// ✅ Default project metadata
+const PROJECT_META = {
+  'commercial.project1': { title: 'Manish Malhotra — Dubai Mall',      location: 'Dubai, UAE',     category: 'Retail'  },
+  'commercial.project2': { title: 'Manish Malhotra — Jio World Plaza', location: 'Mumbai',         category: 'Retail'  },
+  'commercial.project3': { title: 'Bollyglow',                         location: 'Mumbai',         category: 'Beauty'  },
+  'commercial.project4': { title: 'Grandmama Café',                    location: 'Mumbai',         category: 'F&B'     },
+  'commercial.project5': { title: 'Art Café — Jio Convention Center',  location: 'Mumbai',         category: 'F&B'     },
+  'commercial.project6': { title: 'Falguni Shane Peacock Store',       location: 'Mumbai & Delhi', category: 'Retail'  },
+  'commercial.project7': { title: 'Radio Show Project',                location: 'Mumbai',         category: 'Media'   },
+  'commercial.project8': { title: 'Manish Malhotra Dubai Store',       location: 'Dubai, UAE',     category: 'Retail'  },
+};
 
 const Commercial = () => {
   const [isMobile,   setIsMobile]   = useState(window.innerWidth < 768);
   const [filter,     setFilter]     = useState('All');
   const [hoveredIdx, setHoveredIdx] = useState(null);
+  const { images, getSectionImages } = useSiteImages(); // ✅
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -25,14 +26,33 @@ const Commercial = () => {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const filtered = filter === 'All' ? PROJECTS : PROJECTS.filter(p => p.category === filter);
+  // ✅ Dynamic — default + admin added dono
+  const allSectionImages = getSectionImages('commercial');
+
+  const heroUrl  = images['commercial.hero'];
+  const introUrl = images['commercial.intro'];
+
+  // ✅ Saare project images dynamically
+  const PROJECTS = allSectionImages
+    .filter(item => item.key.includes('.project'))
+    .map(item => ({
+      key:      item.key,
+      img:      item.url,
+      title:    PROJECT_META[item.key]?.title    || `Project ${item.key.split('.project')[1]}`,
+      location: PROJECT_META[item.key]?.location || 'India',
+      category: PROJECT_META[item.key]?.category || 'Commercial',
+    }));
+
+  // ✅ Categories bhi dynamic ban jayenge
+  const CATEGORIES = ['All', ...new Set(PROJECTS.map(p => p.category))];
+  const filtered   = filter === 'All' ? PROJECTS : PROJECTS.filter(p => p.category === filter);
 
   return (
     <main style={{ paddingTop: '80px', minHeight: '100vh', background: '#faf8f5' }}>
 
       {/* ── HERO ── */}
       <div style={{ position: 'relative', height: isMobile ? '50vh' : '65vh', overflow: 'hidden' }}>
-        <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=1600&q=80"
+        <img src={heroUrl}
           alt="Commercial"
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         <div style={{ position: 'absolute', inset: 0,
@@ -44,7 +64,9 @@ const Commercial = () => {
         }}>
           <p style={{ fontSize: '0.6rem', letterSpacing: '4px', textTransform: 'uppercase',
             color: 'rgba(255,255,255,0.6)', fontFamily: 'sans-serif', marginBottom: '16px' }}>
-            <Link to="/services" style={{ color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>Services</Link>
+            <Link to="/services" style={{ color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>
+              Services
+            </Link>
             {' / Interiors / Commercial'}
           </p>
           <h1 style={{ fontFamily: "'Georgia', serif", color: '#fff',
@@ -84,23 +106,13 @@ const Commercial = () => {
             Designed to inspire,<br />built to impress
           </h2>
           <div style={{ width: '40px', height: '1px', background: '#c9a96e', marginBottom: '24px' }} />
-          {/* ── INTRO — replace karo ye do paragraphs ── */}
-<p style={{
-  fontFamily: "'Georgia', serif", fontSize: '1rem', color: '#555',
-  lineHeight: '2', fontWeight: '300', marginBottom: '16px',
-}}>
-  From high-end retail boutiques to luxury cafés and media studios, TrueBuild Projects
-  spans industries where design is a competitive advantage. Proudly serving Delhi NCR
-  and Uttar Pradesh, we specialize in the end-to-end delivery of Luxury Stores &amp; Shops,
-  Modern Commercial Offices, Restaurants and Large-scale Warehouse Construction.
-</p>
-<p style={{
-  fontFamily: "'Georgia', serif", fontSize: '1rem', color: '#555',
-  lineHeight: '2', fontWeight: '300', marginBottom: '32px',
-}}>
-  We have collaborated with Manish Malhotra, Falguni Shane Peacock and several of
-  India and UAE's most prestigious commercial brands.
-</p>
+          <p style={{ fontFamily: "'Georgia', serif", fontSize: '1rem', color: '#555',
+            lineHeight: '2', fontWeight: '300', marginBottom: '16px' }}>
+            From high-end retail boutiques to luxury cafés and media studios, TrueBuild Projects
+            spans industries where design is a competitive advantage. Proudly serving Delhi NCR
+            and Uttar Pradesh, we specialize in the end-to-end delivery of Luxury Stores & Shops,
+            Modern Commercial Offices, Restaurants and Large-scale Warehouse Construction.
+          </p>
           <Link to="/contact" style={{
             display: 'inline-block', padding: '13px 32px',
             border: '1px solid #1a1a1a', color: '#1a1a1a',
@@ -108,14 +120,16 @@ const Commercial = () => {
             letterSpacing: '3px', textTransform: 'uppercase', fontFamily: 'sans-serif',
             transition: 'all 0.3s',
           }}
-            onMouseEnter={e => { e.currentTarget.style.background='#1a1a1a'; e.currentTarget.style.color='#fff'; }}
-            onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='#1a1a1a'; }}>
+            onMouseEnter={e => { e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.color = '#fff'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#1a1a1a'; }}>
             Discuss Your Space →
           </Link>
         </div>
+
         <div style={{ position: 'relative' }}>
+          {/* ✅ commercial.intro — admin se change ho sakta hai */}
           <img
-            src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80"
+            src={introUrl}
             alt="Commercial Design"
             style={{ width: '100%', height: isMobile ? '300px' : '460px',
               objectFit: 'cover', display: 'block' }}
@@ -135,40 +149,46 @@ const Commercial = () => {
         boxSizing: 'border-box',
       }}>
         <p style={{ fontSize: '0.6rem', letterSpacing: '5px', textTransform: 'uppercase',
-          color: '#c9a96e', marginBottom: '14px', fontFamily: 'sans-serif',
-          textAlign: 'center' }}>
+          color: '#c9a96e', marginBottom: '14px', fontFamily: 'sans-serif', textAlign: 'center' }}>
           Portfolio
         </p>
         <h2 style={{ textAlign: 'center', fontFamily: "'Georgia', serif",
           fontSize: isMobile ? '1.6rem' : '2rem', fontWeight: '300',
           color: '#1a1a1a', margin: '0 0 32px' }}>
           Commercial Projects
+          {/* ✅ Live count */}
+          <span style={{ fontFamily: 'sans-serif', fontSize: '0.75rem',
+            color: '#c9a96e', marginLeft: '12px', letterSpacing: '2px' }}>
+            ({PROJECTS.length})
+          </span>
         </h2>
 
-        {/* Filter */}
+        {/* ✅ Filter buttons — dynamic categories */}
         <div style={{ display: 'flex', justifyContent: 'center',
           gap: '8px', flexWrap: 'wrap', marginBottom: '40px' }}>
           {CATEGORIES.map(cat => (
             <button key={cat} onClick={() => setFilter(cat)} style={{
               padding: '8px 18px', border: '1px solid',
               borderColor: filter === cat ? '#1a1a1a' : '#ddd',
-              background: filter === cat ? '#1a1a1a' : 'transparent',
-              color: filter === cat ? '#fff' : '#888',
+              background:  filter === cat ? '#1a1a1a' : 'transparent',
+              color:        filter === cat ? '#fff'    : '#888',
               fontSize: '0.6rem', letterSpacing: '2px',
               textTransform: 'uppercase', fontFamily: 'sans-serif',
               cursor: 'pointer', transition: 'all 0.3s',
-            }}>{cat}</button>
+            }}>
+              {cat}
+            </button>
           ))}
         </div>
 
-        {/* Grid */}
+        {/* ✅ Grid — naye images automatically aayenge */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)',
           gap: '2px', maxWidth: '1200px', margin: '0 auto',
         }}>
           {filtered.map((proj, idx) => (
-            <div key={idx}
+            <div key={proj.key}
               onMouseEnter={() => setHoveredIdx(idx)}
               onMouseLeave={() => setHoveredIdx(null)}
               style={{ position: 'relative', overflow: 'hidden',

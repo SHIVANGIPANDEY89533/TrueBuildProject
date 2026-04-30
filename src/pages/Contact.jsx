@@ -17,7 +17,7 @@ const CONTACT_TYPES = [
     title: 'Interiors Project Enquiries',
     desc:  'For residential, commercial, hospitality and architectural design projects.',
     email: 'truebuildproject@gmail.com',
-    phone: '+91 70551 85315',
+    phone: '+91 7217310020',
     color: '#c9a96e',
   },
   {
