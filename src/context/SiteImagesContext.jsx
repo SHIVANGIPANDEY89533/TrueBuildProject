@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { db } from '../config/firebase';
+import { ref, onValue, set, remove } from 'firebase/database';
 
 import img1  from '../assets/images/img1.jpeg';
 import img2  from '../assets/images/img2.jpeg';
@@ -146,85 +148,110 @@ export const IMAGE_LABELS = {
   'contact.hero':            'Hero Banner (img8)',
 };
 
+// ✅ Firebase key safe format — dots ko underscore mein convert karo
+const toFirebaseKey = (key) => key.replace(/\./g, '_');
+const fromFirebaseKey = (key) => key.replace(/_/g, '.');
+
 const SiteImagesContext = createContext();
 
 export const SiteImagesProvider = ({ children }) => {
-  const [images, setImages] = useState(() => {
-    try {
-      const saved = localStorage.getItem('gkd_site_images');
-      return saved ? { ...DEFAULT_IMAGES, ...JSON.parse(saved) } : { ...DEFAULT_IMAGES };
-    } catch {
-      return { ...DEFAULT_IMAGES };
-    }
-  });
+  const [images,   setImages]   = useState({ ...DEFAULT_IMAGES });
+  const [extraKeys, setExtraKeys] = useState([]);
+  const [loading,  setLoading]  = useState(true); // ✅ jab tak Firebase se data aaye
 
-  const [extraKeys, setExtraKeys] = useState(() => {
-    try {
-      const saved = localStorage.getItem('gkd_extra_image_keys');
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
+  // ─────────────────────────────────────────────
+  // ✅ Firebase se REAL-TIME data load karo
+  // ─────────────────────────────────────────────
+  useEffect(() => {
+    let overridesDone = false;
+    let extraDone     = false;
 
-  const saveOverrides = (updated) => {
-    const overrides = {};
-    Object.keys(updated).forEach(k => {
-      if (updated[k] !== DEFAULT_IMAGES[k]) overrides[k] = updated[k];
+    const checkDone = () => {
+      if (overridesDone && extraDone) setLoading(false);
+    };
+
+    // Overrides (changed images)
+    const overridesRef = ref(db, 'site_images/overrides');
+    const unsubOverrides = onValue(overridesRef, (snapshot) => {
+      const raw = snapshot.val() || {};
+      // Firebase keys (underscore) → original keys (dots)
+      const restored = {};
+      Object.entries(raw).forEach(([fbKey, url]) => {
+        restored[fromFirebaseKey(fbKey)] = url;
+      });
+      setImages({ ...DEFAULT_IMAGES, ...restored });
+      overridesDone = true;
+      checkDone();
     });
-    localStorage.setItem('gkd_site_images', JSON.stringify(overrides));
-  };
 
+    // Extra (admin-added) keys
+    const extraRef = ref(db, 'site_images/extraKeys');
+    const unsubExtra = onValue(extraRef, (snapshot) => {
+      const raw = snapshot.val();
+      setExtraKeys(raw ? Object.values(raw) : []);
+      extraDone = true;
+      checkDone();
+    });
+
+    return () => {
+      unsubOverrides();
+      unsubExtra();
+    };
+  }, []);
+
+  // ─────────────────────────────────────────────
+  // ✅ Image UPDATE — Firebase mein save karo
+  // ─────────────────────────────────────────────
   const updateImage = (key, url) => {
-    setImages(prev => {
-      const updated = { ...prev, [key]: url };
-      saveOverrides(updated);
-      return updated;
-    });
+    const fbKey = toFirebaseKey(key);
+    if (url !== DEFAULT_IMAGES[key]) {
+      set(ref(db, `site_images/overrides/${fbKey}`), url);
+    } else {
+      remove(ref(db, `site_images/overrides/${fbKey}`));
+    }
   };
 
+  // ─────────────────────────────────────────────
+  // ✅ Naya image ADD karo
+  // ─────────────────────────────────────────────
   const addImage = (key, url, label = '') => {
     if (!key || !url) return;
-    setImages(prev => {
-      const updated = { ...prev, [key]: url };
-      saveOverrides(updated);
-      return updated;
-    });
-    setExtraKeys(prev => {
-      const newExtra = prev.find(e => e.key === key)
-        ? prev.map(e => e.key === key ? { key, label: label || key } : e)
-        : [...prev, { key, label: label || key }];
-      localStorage.setItem('gkd_extra_image_keys', JSON.stringify(newExtra));
-      return newExtra;
+    const fbKey = toFirebaseKey(key);
+    set(ref(db, `site_images/overrides/${fbKey}`), url);
+    set(ref(db, `site_images/extraKeys/${fbKey}`), {
+      key,
+      label: label || key,
     });
   };
 
+  // ─────────────────────────────────────────────
+  // ✅ Extra image DELETE karo
+  // ─────────────────────────────────────────────
   const removeExtraImage = (key) => {
-    setImages(prev => {
-      const updated = { ...prev };
-      delete updated[key];
-      saveOverrides(updated);
-      return updated;
-    });
-    setExtraKeys(prev => {
-      const newExtra = prev.filter(e => e.key !== key);
-      localStorage.setItem('gkd_extra_image_keys', JSON.stringify(newExtra));
-      return newExtra;
-    });
+    const fbKey = toFirebaseKey(key);
+    remove(ref(db, `site_images/overrides/${fbKey}`));
+    remove(ref(db, `site_images/extraKeys/${fbKey}`));
   };
 
+  // ─────────────────────────────────────────────
+  // ✅ Single image RESET — default par wapas
+  // ─────────────────────────────────────────────
   const resetImage = (key) => {
-    setImages(prev => {
-      const updated = { ...prev, [key]: DEFAULT_IMAGES[key] };
-      saveOverrides(updated);
-      return updated;
-    });
+    const fbKey = toFirebaseKey(key);
+    remove(ref(db, `site_images/overrides/${fbKey}`));
   };
 
+  // ─────────────────────────────────────────────
+  // ✅ Sab RESET karo
+  // ─────────────────────────────────────────────
   const resetAll = () => {
-    setImages({ ...DEFAULT_IMAGES });
-    localStorage.removeItem('gkd_site_images');
+    set(ref(db, 'site_images/overrides'), null);
+    set(ref(db, 'site_images/extraKeys'), null);
   };
 
-  // ✅ KEY FUNCTION — section ki saari images (default + admin added)
+  // ─────────────────────────────────────────────
+  // ✅ Section ki saari images (default + admin added)
+  // ─────────────────────────────────────────────
   const getSectionImages = (sectionKey) => {
     const defaultKeys = Object.keys(DEFAULT_IMAGES).filter(k =>
       k.startsWith(sectionKey + '.')
@@ -244,6 +271,36 @@ export const SiteImagesProvider = ({ children }) => {
     k => images[k] !== DEFAULT_IMAGES[k]
   ).length;
 
+  // ─────────────────────────────────────────────
+  // ✅ Loading screen — Firebase se data aane tak
+  // ─────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div style={{
+        position: 'fixed', inset: 0,
+        background: '#faf8f5', zIndex: 9999,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: '42px', height: '42px',
+            border: '2px solid #e8e3db',
+            borderTop: '2px solid #c9a96e',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite',
+            margin: '0 auto 16px',
+          }} />
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          <p style={{
+            fontFamily: 'sans-serif', fontSize: '0.6rem',
+            letterSpacing: '3px', textTransform: 'uppercase', color: '#bbb',
+            margin: 0,
+          }}>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <SiteImagesContext.Provider value={{
       images,
@@ -254,7 +311,7 @@ export const SiteImagesProvider = ({ children }) => {
       addImage,
       removeExtraImage,
       extraKeys,
-      getSectionImages, // ✅ NEW
+      getSectionImages,
     }}>
       {children}
     </SiteImagesContext.Provider>
