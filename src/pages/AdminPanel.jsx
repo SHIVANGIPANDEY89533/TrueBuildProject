@@ -9,6 +9,24 @@ import {
   DEFAULT_IMAGES,
 } from '../context/SiteImagesContext';
 
+// ✅ Cloudinary Config
+const CLOUDINARY_CLOUD_NAME    = 'dvcol26qc';
+const CLOUDINARY_UPLOAD_PRESET = 'a10l6bjc';
+
+// ✅ Cloudinary upload function
+const uploadToCloudinary = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+    { method: 'POST', body: formData }
+  );
+  if (!res.ok) throw new Error('Upload failed');
+  const data = await res.json();
+  return data.secure_url;
+};
+
 const EMPTY_FORM = {
   name: '', price: '', category: 'Artefacts',
   img: '', desc: '',
@@ -31,15 +49,17 @@ const ImageManager = () => {
   const [searchQuery,    setSearchQuery]     = useState('');
   const [savedKey,       setSavedKey]        = useState(null);
   const [isMobile,       setIsMobile]        = useState(window.innerWidth < 768);
-  const [showAddForm,    setShowAddForm]      = useState(false);   // ✅ NEW
-  const [addSection,     setAddSection]       = useState(IMAGE_SECTIONS[0].key); // ✅ NEW
-  const [addCustomKey,   setAddCustomKey]     = useState('');      // ✅ NEW
-  const [addLabel,       setAddLabel]         = useState('');      // ✅ NEW
-  const [addUrl,         setAddUrl]           = useState('');      // ✅ NEW
-  const [addPreview,     setAddPreview]       = useState('');      // ✅ NEW
-  const [addUploadMode,  setAddUploadMode]    = useState('url');   // ✅ NEW
-  const [addSuccess,     setAddSuccess]       = useState(false);   // ✅ NEW
-  const addFileRef = useRef(null);
+  const [showAddForm,    setShowAddForm]      = useState(false);
+  const [addSection,     setAddSection]       = useState(IMAGE_SECTIONS[0].key);
+  const [addCustomKey,   setAddCustomKey]     = useState('');
+  const [addLabel,       setAddLabel]         = useState('');
+  const [addUrl,         setAddUrl]           = useState('');
+  const [addPreview,     setAddPreview]       = useState('');
+  const [addUploadMode,  setAddUploadMode]    = useState('url');
+  const [addSuccess,     setAddSuccess]       = useState(false);
+  const [uploading,      setUploading]        = useState(false);
+  const [addUploading,   setAddUploading]     = useState(false);
+  const addFileRef   = useRef(null);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -48,14 +68,12 @@ const ImageManager = () => {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  // Default keys for active section
   const defaultSectionKeys = Object.keys(images).filter(k =>
     k.startsWith(activeSection + '.') &&
     DEFAULT_IMAGES.hasOwnProperty(k) &&
     (searchQuery === '' || (IMAGE_LABELS[k] || k).toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  // ✅ Extra (custom) keys for active section
   const extraSectionKeys = extraKeys
     .filter(e =>
       e.key.startsWith(activeSection + '.') &&
@@ -63,8 +81,7 @@ const ImageManager = () => {
     )
     .map(e => e.key);
 
-  const sectionKeys = [...defaultSectionKeys, ...extraSectionKeys];
-
+  const sectionKeys  = [...defaultSectionKeys, ...extraSectionKeys];
   const isOverridden = (key) => images[key] !== DEFAULT_IMAGES[key];
   const isExtra      = (key) => !DEFAULT_IMAGES.hasOwnProperty(key);
 
@@ -80,26 +97,36 @@ const ImageManager = () => {
     if (val.startsWith('http') || val.startsWith('data:')) setPreviewUrl(val);
   };
 
-  const handleFileUpload = (e) => {
+  // ✅ Edit modal — Cloudinary upload
+  const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => { setPreviewUrl(ev.target.result); setUrlInput(ev.target.result); };
-    reader.readAsDataURL(file);
+    setUploading(true);
+    setPreviewUrl('');
+    setUrlInput('uploading...');
+    try {
+      const url = await uploadToCloudinary(file);
+      setPreviewUrl(url);
+      setUrlInput(url);
+    } catch {
+      alert('Upload failed! Internet check karo ya Cloudinary preset "Unsigned" hai ya nahi dekho.');
+      setUrlInput('');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSave = () => {
-    if (!urlInput || !editingKey) return;
+    if (!urlInput || !editingKey || urlInput === 'uploading...') return;
     updateImage(editingKey, urlInput);
     setSavedKey(editingKey);
     setTimeout(() => setSavedKey(null), 2500);
     setEditingKey(null);
   };
 
-  // ✅ NEW — Add image handler
   const handleAddImage = () => {
-    if (!addUrl) return alert('Image URL ya file select karo!');
-    const finalKey = `${addSection}.${addCustomKey.trim() || 'custom' + Date.now()}`;
+    if (!addUrl || addUrl === 'uploading...') return alert('Pehle image upload hone do!');
+    const finalKey   = `${addSection}.${addCustomKey.trim() || 'custom' + Date.now()}`;
     const finalLabel = addLabel.trim() || finalKey;
     addImage(finalKey, addUrl, finalLabel);
     setAddSuccess(true);
@@ -107,16 +134,27 @@ const ImageManager = () => {
       setAddSuccess(false);
       setShowAddForm(false);
       setAddCustomKey(''); setAddLabel(''); setAddUrl(''); setAddPreview('');
-      setActiveSection(addSection); // ✅ us section par jump karo jahan add kiya
+      setActiveSection(addSection);
     }, 1500);
   };
 
-  const handleAddFileUpload = (e) => {
+  // ✅ Add modal — Cloudinary upload
+  const handleAddFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => { setAddPreview(ev.target.result); setAddUrl(ev.target.result); };
-    reader.readAsDataURL(file);
+    setAddUploading(true);
+    setAddPreview('');
+    setAddUrl('uploading...');
+    try {
+      const url = await uploadToCloudinary(file);
+      setAddPreview(url);
+      setAddUrl(url);
+    } catch {
+      alert('Upload failed!');
+      setAddUrl('');
+    } finally {
+      setAddUploading(false);
+    }
   };
 
   return (
@@ -204,7 +242,6 @@ const ImageManager = () => {
       {/* ── MAIN PANEL ── */}
       <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
 
-        {/* Header row */}
         <div style={{ display: 'flex', justifyContent: 'space-between',
           alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
           <h3 style={{ fontFamily: "'Georgia', serif", fontSize: '1.2rem',
@@ -227,13 +264,11 @@ const ImageManager = () => {
                 fontFamily: 'sans-serif', width: '180px', background: '#fff',
               }}
             />
-            {/* ✅ ADD IMAGE BUTTON */}
             <button onClick={() => { setShowAddForm(true); setAddSection(activeSection); }} style={{
               padding: '9px 20px', background: '#c9a96e', color: '#fff',
               border: 'none', cursor: 'pointer',
               fontSize: '0.65rem', letterSpacing: '2px',
               textTransform: 'uppercase', fontFamily: 'sans-serif',
-              transition: 'background 0.2s',
             }}
               onMouseEnter={e => e.currentTarget.style.background = '#1a1a1a'}
               onMouseLeave={e => e.currentTarget.style.background = '#c9a96e'}>
@@ -267,7 +302,6 @@ const ImageManager = () => {
                   style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                   onError={e => { e.target.src = 'https://via.placeholder.com/400x300/f5f0ea/bbb?text=No+Image'; }}
                 />
-                {/* Badge */}
                 {isExtra(key) && (
                   <span style={{
                     position: 'absolute', top: '7px', right: '7px',
@@ -317,7 +351,6 @@ const ImageManager = () => {
                     onMouseLeave={e => e.target.style.background = '#1a1a1a'}>
                     ✎ Edit
                   </button>
-                  {/* ✅ Extra image ko delete kar sakte hain */}
                   {isExtra(key) ? (
                     <button onClick={() => {
                       if (window.confirm('Is image ko remove karo?')) removeExtraImage(key);
@@ -367,7 +400,7 @@ const ImageManager = () => {
       </div>
 
       {/* ══════════════════════════════════════
-          ✅ ADD IMAGE MODAL
+          ADD IMAGE MODAL
       ══════════════════════════════════════ */}
       {showAddForm && (
         <>
@@ -401,15 +434,14 @@ const ImageManager = () => {
               Kisi bhi section mein image add karo
             </h3>
 
-            {/* Section select */}
             <label style={labelStyle}>Section choose karo</label>
-            <select value={addSection} onChange={e => setAddSection(e.target.value)} style={{ ...inputStyle, marginBottom: '16px', cursor: 'pointer' }}>
+            <select value={addSection} onChange={e => setAddSection(e.target.value)}
+              style={{ ...inputStyle, marginBottom: '16px', cursor: 'pointer' }}>
               {IMAGE_SECTIONS.map(s => (
                 <option key={s.key} value={s.key}>{s.label}</option>
               ))}
             </select>
 
-            {/* Custom key name */}
             <label style={labelStyle}>Image key name (e.g. project7, banner3)</label>
             <input
               value={addCustomKey}
@@ -424,7 +456,6 @@ const ImageManager = () => {
               </code>
             </p>
 
-            {/* Label (display name) */}
             <label style={labelStyle}>Display label (optional)</label>
             <input
               value={addLabel}
@@ -433,7 +464,6 @@ const ImageManager = () => {
               style={{ ...inputStyle, marginBottom: '20px' }}
             />
 
-            {/* Upload mode toggle */}
             <div style={{ display: 'flex', gap: '2px', marginBottom: '16px' }}>
               {[
                 { key: 'url',    label: '🔗 Paste URL'   },
@@ -452,44 +482,56 @@ const ImageManager = () => {
               ))}
             </div>
 
-            {/* URL input */}
             {addUploadMode === 'url' && (
               <div style={{ marginBottom: '16px' }}>
                 <input
                   value={addUrl.startsWith('data:') ? '' : addUrl}
                   onChange={e => { setAddUrl(e.target.value); setAddPreview(e.target.value); }}
-                  placeholder="https://images.unsplash.com/..."
+                  placeholder="https://res.cloudinary.com/..."
                   style={inputStyle}
                 />
               </div>
             )}
 
-            {/* File upload */}
             {addUploadMode === 'upload' && (
               <div style={{ marginBottom: '16px' }}>
                 <input ref={addFileRef} type="file" accept="image/*"
                   onChange={handleAddFileUpload} style={{ display: 'none' }} />
-                <div onClick={() => addFileRef.current.click()} style={{
+                <div onClick={() => !addUploading && addFileRef.current.click()} style={{
                   border: '2px dashed #e8e3db', padding: '28px 20px',
-                  textAlign: 'center', cursor: 'pointer', background: '#fdfcfb',
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#c9a96e'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#e8e3db'; }}>
-                  <p style={{ fontSize: '1.8rem', margin: '0 0 8px' }}>📁</p>
-                  <p style={{ fontFamily: 'sans-serif', fontSize: '0.8rem', color: '#888', margin: 0 }}>
-                    Click to select image from your device
-                  </p>
+                  textAlign: 'center', cursor: addUploading ? 'wait' : 'pointer',
+                  background: '#fdfcfb',
+                }}>
+                  {addUploading ? (
+                    <>
+                      <div style={{
+                        width: '32px', height: '32px',
+                        border: '2px solid #e8e3db', borderTop: '2px solid #c9a96e',
+                        borderRadius: '50%', animation: 'spin 0.8s linear infinite',
+                        margin: '0 auto 10px',
+                      }} />
+                      <p style={{ fontFamily: 'sans-serif', fontSize: '0.75rem', color: '#c9a96e', margin: 0 }}>
+                        Cloudinary par upload ho raha hai...
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p style={{ fontSize: '1.8rem', margin: '0 0 8px' }}>📁</p>
+                      <p style={{ fontFamily: 'sans-serif', fontSize: '0.8rem', color: '#888', margin: 0 }}>
+                        Click to select image from your device
+                      </p>
+                    </>
+                  )}
                 </div>
-                {addUrl.startsWith('data:') && (
+                {addUrl && addUrl !== 'uploading...' && addUrl.startsWith('http') && (
                   <p style={{ fontFamily: 'sans-serif', fontSize: '0.7rem', color: '#2ecc71', marginTop: '8px' }}>
-                    ✓ File loaded
+                    ✓ Cloudinary par upload ho gayi!
                   </p>
                 )}
               </div>
             )}
 
-            {/* Preview */}
-            {addPreview && (
+            {addPreview && addPreview.startsWith('http') && (
               <div style={{ marginBottom: '20px' }}>
                 <p style={labelStyle}>Preview</p>
                 <img src={addPreview} alt="preview"
@@ -499,7 +541,6 @@ const ImageManager = () => {
               </div>
             )}
 
-            {/* Success message */}
             {addSuccess && (
               <div style={{
                 background: '#f0faf0', border: '1px solid #c3e6cb',
@@ -510,19 +551,19 @@ const ImageManager = () => {
               </div>
             )}
 
-            {/* Buttons */}
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={handleAddImage} style={{
-                flex: 1, padding: '13px',
-                background: addUrl ? '#c9a96e' : '#e0d8d0',
-                color: '#fff', border: 'none',
-                cursor: addUrl ? 'pointer' : 'not-allowed',
-                fontSize: '0.65rem', letterSpacing: '3px',
-                textTransform: 'uppercase', fontFamily: 'sans-serif',
-              }}
-                onMouseEnter={e => { if (addUrl) e.target.style.background = '#1a1a1a'; }}
-                onMouseLeave={e => { if (addUrl) e.target.style.background = '#c9a96e'; }}>
-                ✓ Add Image
+              <button
+                onClick={handleAddImage}
+                disabled={!addUrl || addUrl === 'uploading...' || addUploading}
+                style={{
+                  flex: 1, padding: '13px',
+                  background: (addUrl && addUrl !== 'uploading...' && !addUploading) ? '#c9a96e' : '#e0d8d0',
+                  color: '#fff', border: 'none',
+                  cursor: (addUrl && !addUploading) ? 'pointer' : 'not-allowed',
+                  fontSize: '0.65rem', letterSpacing: '3px',
+                  textTransform: 'uppercase', fontFamily: 'sans-serif',
+                }}>
+                {addUploading ? 'Uploading...' : '✓ Add Image'}
               </button>
               <button onClick={() => setShowAddForm(false)} style={{
                 padding: '13px 16px', background: 'transparent',
@@ -538,7 +579,7 @@ const ImageManager = () => {
       )}
 
       {/* ══════════════════════════════════════
-          EDIT IMAGE MODAL (same as before)
+          EDIT IMAGE MODAL
       ══════════════════════════════════════ */}
       {editingKey && (
         <>
@@ -576,7 +617,6 @@ const ImageManager = () => {
               <code style={{ background: '#f5f0ea', padding: '2px 8px' }}>{editingKey}</code>
             </p>
 
-            {/* Before / After */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '22px' }}>
               <div>
                 <p style={{ fontFamily: 'sans-serif', fontSize: '0.56rem',
@@ -593,7 +633,7 @@ const ImageManager = () => {
                   letterSpacing: '2px', textTransform: 'uppercase', color: '#c9a96e', margin: '0 0 6px' }}>
                   New Preview
                 </p>
-                {previewUrl ? (
+                {previewUrl && previewUrl.startsWith('http') ? (
                   <img src={previewUrl} alt="New"
                     style={{ width: '100%', height: '110px', objectFit: 'cover', display: 'block' }}
                     onError={e => e.target.style.display = 'none'}
@@ -601,13 +641,14 @@ const ImageManager = () => {
                 ) : (
                   <div style={{ width: '100%', height: '110px', background: '#f5f0ea',
                     display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ color: '#ccc', fontSize: '0.7rem', fontFamily: 'sans-serif' }}>No preview</span>
+                    <span style={{ color: '#ccc', fontSize: '0.7rem', fontFamily: 'sans-serif' }}>
+                      {uploading ? 'Uploading...' : 'No preview'}
+                    </span>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Mode toggle */}
             <div style={{ display: 'flex', gap: '2px', marginBottom: '18px' }}>
               {[
                 { key: 'url',    label: '🔗 Paste URL'   },
@@ -632,12 +673,12 @@ const ImageManager = () => {
                 <input
                   value={urlInput.startsWith('data:') ? '' : urlInput}
                   onChange={e => handleUrlChange(e.target.value)}
-                  placeholder="https://images.unsplash.com/..."
+                  placeholder="https://res.cloudinary.com/..."
                   style={inputStyle} autoFocus
                 />
                 <p style={{ fontFamily: 'sans-serif', fontSize: '0.62rem',
                   color: '#bbb', marginTop: '6px', lineHeight: '1.7' }}>
-                  Tip: Unsplash, Cloudinary, imgbb.com ya koi bhi direct image URL
+                  Tip: Cloudinary, Unsplash ya koi bhi direct image URL
                 </p>
               </div>
             )}
@@ -646,40 +687,55 @@ const ImageManager = () => {
               <div style={{ marginBottom: '20px' }}>
                 <input ref={fileInputRef} type="file" accept="image/*"
                   onChange={handleFileUpload} style={{ display: 'none' }} />
-                <div onClick={() => fileInputRef.current.click()} style={{
+                <div onClick={() => !uploading && fileInputRef.current.click()} style={{
                   border: '2px dashed #e8e3db', padding: '36px 20px',
-                  textAlign: 'center', cursor: 'pointer', background: '#fdfcfb',
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#c9a96e'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#e8e3db'; }}>
-                  <p style={{ fontSize: '2rem', margin: '0 0 10px' }}>📁</p>
-                  <p style={{ fontFamily: 'sans-serif', fontSize: '0.8rem', color: '#888', margin: '0 0 6px' }}>
-                    Click to select image from your computer
-                  </p>
-                  <p style={{ fontFamily: 'sans-serif', fontSize: '0.62rem', color: '#bbb', margin: 0 }}>
-                    JPG, PNG, WEBP supported
-                  </p>
+                  textAlign: 'center', cursor: uploading ? 'wait' : 'pointer', background: '#fdfcfb',
+                }}>
+                  {uploading ? (
+                    <>
+                      <div style={{
+                        width: '32px', height: '32px',
+                        border: '2px solid #e8e3db', borderTop: '2px solid #c9a96e',
+                        borderRadius: '50%', animation: 'spin 0.8s linear infinite',
+                        margin: '0 auto 10px',
+                      }} />
+                      <p style={{ fontFamily: 'sans-serif', fontSize: '0.8rem', color: '#c9a96e', margin: 0 }}>
+                        Cloudinary par upload ho raha hai...
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p style={{ fontSize: '2rem', margin: '0 0 10px' }}>📁</p>
+                      <p style={{ fontFamily: 'sans-serif', fontSize: '0.8rem', color: '#888', margin: '0 0 6px' }}>
+                        Click to select image from your computer
+                      </p>
+                      <p style={{ fontFamily: 'sans-serif', fontSize: '0.62rem', color: '#bbb', margin: 0 }}>
+                        JPG, PNG, WEBP — Cloudinary par automatically upload hogi
+                      </p>
+                    </>
+                  )}
                 </div>
-                {urlInput.startsWith('data:') && (
+                {urlInput && urlInput.startsWith('http') && !uploading && (
                   <p style={{ fontFamily: 'sans-serif', fontSize: '0.7rem', color: '#2ecc71', marginTop: '8px' }}>
-                    ✓ File loaded — click Save to apply
+                    ✓ Cloudinary par upload ho gayi — Save karo!
                   </p>
                 )}
               </div>
             )}
 
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={handleSave} disabled={!urlInput} style={{
-                flex: 1, padding: '13px',
-                background: urlInput ? '#c9a96e' : '#e0d8d0',
-                color: '#fff', border: 'none',
-                cursor: urlInput ? 'pointer' : 'not-allowed',
-                fontSize: '0.65rem', letterSpacing: '3px',
-                textTransform: 'uppercase', fontFamily: 'sans-serif',
-              }}
-                onMouseEnter={e => { if (urlInput) e.target.style.background = '#1a1a1a'; }}
-                onMouseLeave={e => { if (urlInput) e.target.style.background = '#c9a96e'; }}>
-                ✓ Save Image
+              <button
+                onClick={handleSave}
+                disabled={!urlInput || urlInput === 'uploading...' || uploading}
+                style={{
+                  flex: 1, padding: '13px',
+                  background: (urlInput && !uploading) ? '#c9a96e' : '#e0d8d0',
+                  color: '#fff', border: 'none',
+                  cursor: (urlInput && !uploading) ? 'pointer' : 'not-allowed',
+                  fontSize: '0.65rem', letterSpacing: '3px',
+                  textTransform: 'uppercase', fontFamily: 'sans-serif',
+                }}>
+                {uploading ? 'Uploading...' : '✓ Save Image'}
               </button>
               {!isExtra(editingKey) && (
                 <button onClick={() => { resetImage(editingKey); setEditingKey(null); }} style={{
@@ -705,6 +761,8 @@ const ImageManager = () => {
           </div>
         </>
       )}
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 };
@@ -715,14 +773,15 @@ const ImageManager = () => {
 const AdminPanel = () => {
   const { admin, logout }          = useAuth();
   const navigate                   = useNavigate();
-  const [products,    setProducts] = useState([]);
-  const [form,        setForm]     = useState(EMPTY_FORM);
-  const [editingId,   setEditingId]  = useState(null);
-  const [previewImg,  setPreviewImg] = useState('');
-  const [successMsg,  setSuccessMsg] = useState('');
-  const [activeTab,   setActiveTab]  = useState('add');
-  const [imgTab,      setImgTab]     = useState('upload');
-  const [isMobile,    setIsMobile]   = useState(window.innerWidth < 768);
+  const [products,      setProducts]     = useState([]);
+  const [form,          setForm]         = useState(EMPTY_FORM);
+  const [editingId,     setEditingId]    = useState(null);
+  const [previewImg,    setPreviewImg]   = useState('');
+  const [successMsg,    setSuccessMsg]   = useState('');
+  const [activeTab,     setActiveTab]    = useState('add');
+  const [imgTab,        setImgTab]       = useState('upload');
+  const [isMobile,      setIsMobile]     = useState(window.innerWidth < 768);
+  const [prodUploading, setProdUploading] = useState(false);
 
   const videoRef  = useRef(null);
   const canvasRef = useRef(null);
@@ -759,16 +818,21 @@ const AdminPanel = () => {
     if (field === 'img') setPreviewImg(value);
   };
 
-  const handleFileUpload = (e) => {
+  // ✅ Product image — Cloudinary upload
+  const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) { alert('Please select an image file.'); return; }
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setPreviewImg(ev.target.result);
-      setForm(prev => ({ ...prev, img: ev.target.result }));
-    };
-    reader.readAsDataURL(file);
+    setProdUploading(true);
+    try {
+      const url = await uploadToCloudinary(file);
+      setPreviewImg(url);
+      setForm(prev => ({ ...prev, img: url }));
+    } catch {
+      alert('Upload failed! Internet check karo.');
+    } finally {
+      setProdUploading(false);
+    }
   };
 
   const startCamera = async () => {
@@ -818,9 +882,7 @@ const AdminPanel = () => {
 
   const handleEdit = (product) => {
     setForm({ name: product.name, price: product.price, category: product.category, img: product.img, desc: product.desc || '' });
-    setPreviewImg(product.img);
-    setEditingId(product.id);
-    setActiveTab('add');
+    setPreviewImg(product.img); setEditingId(product.id); setActiveTab('add');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -905,15 +967,13 @@ const AdminPanel = () => {
               cursor: 'pointer', fontSize: '0.68rem',
               letterSpacing: '2px', textTransform: 'uppercase',
               fontFamily: 'sans-serif', transition: 'all 0.2s',
-            }}
-              onMouseEnter={e => { if (activeTab !== tab.key) { e.currentTarget.style.borderColor = '#c9a96e'; e.currentTarget.style.color = '#c9a96e'; } }}
-              onMouseLeave={e => { if (activeTab !== tab.key) { e.currentTarget.style.borderColor = '#ddd'; e.currentTarget.style.color = '#888'; } }}>
+            }}>
               {tab.label}
             </button>
           ))}
         </div>
 
-        {/* TAB 1 — ADD/EDIT PRODUCT */}
+        {/* ─── TAB 1 — ADD / EDIT PRODUCT ─── */}
         {activeTab === 'add' && (
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '40px' }}>
             <div style={{ background: '#fff', padding: '32px', boxShadow: '0 2px 16px rgba(0,0,0,0.04)' }}>
@@ -942,6 +1002,7 @@ const AdminPanel = () => {
                   </select>
                 </div>
 
+                {/* Image Section */}
                 <div style={{ marginBottom: '24px' }}>
                   <label style={labelStyle}>Product Image *</label>
                   <div style={{ display: 'flex', gap: '2px', marginBottom: '16px' }}>
@@ -965,24 +1026,40 @@ const AdminPanel = () => {
 
                   {imgTab === 'upload' && (
                     <div>
-                      <input ref={fileRef} type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
-                      <div onClick={() => fileRef.current.click()} style={{
+                      <input ref={fileRef} type="file" accept="image/*"
+                        onChange={handleFileUpload} style={{ display: 'none' }} />
+                      <div onClick={() => !prodUploading && fileRef.current.click()} style={{
                         border: '2px dashed #ddd', padding: '32px 20px',
-                        textAlign: 'center', cursor: 'pointer', background: '#fdfcfb',
-                      }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = '#c9a96e'; }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = '#ddd'; }}>
-                        <p style={{ fontSize: '2rem', margin: '0 0 10px' }}>📁</p>
-                        <p style={{ fontFamily: 'sans-serif', fontSize: '0.82rem', color: '#888', margin: '0 0 6px' }}>
-                          Click to browse from your <strong>Gallery / PC</strong>
-                        </p>
-                        <p style={{ fontFamily: 'sans-serif', fontSize: '0.68rem', color: '#bbb', margin: 0 }}>
-                          JPG, PNG, WEBP supported
-                        </p>
+                        textAlign: 'center', cursor: prodUploading ? 'wait' : 'pointer',
+                        background: '#fdfcfb',
+                      }}>
+                        {prodUploading ? (
+                          <>
+                            <div style={{
+                              width: '32px', height: '32px',
+                              border: '2px solid #e8e3db', borderTop: '2px solid #c9a96e',
+                              borderRadius: '50%', animation: 'spin 0.8s linear infinite',
+                              margin: '0 auto 10px',
+                            }} />
+                            <p style={{ fontFamily: 'sans-serif', fontSize: '0.8rem', color: '#c9a96e', margin: 0 }}>
+                              Cloudinary par upload ho raha hai...
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p style={{ fontSize: '2rem', margin: '0 0 10px' }}>📁</p>
+                            <p style={{ fontFamily: 'sans-serif', fontSize: '0.82rem', color: '#888', margin: '0 0 6px' }}>
+                              Click to browse from your <strong>Gallery / PC</strong>
+                            </p>
+                            <p style={{ fontFamily: 'sans-serif', fontSize: '0.68rem', color: '#bbb', margin: 0 }}>
+                              Cloudinary par automatically upload hogi
+                            </p>
+                          </>
+                        )}
                       </div>
-                      {previewImg && imgTab === 'upload' && (
+                      {previewImg && previewImg.startsWith('http') && (
                         <p style={{ marginTop: '8px', fontSize: '0.72rem', color: '#2d6a4f', fontFamily: 'sans-serif' }}>
-                          ✓ Image selected
+                          ✓ Upload complete
                         </p>
                       )}
                     </div>
@@ -1007,7 +1084,8 @@ const AdminPanel = () => {
                       ) : (
                         <div>
                           <video ref={videoRef} autoPlay playsInline style={{
-                            width: '100%', maxHeight: '260px', objectFit: 'cover', background: '#000', display: 'block',
+                            width: '100%', maxHeight: '260px', objectFit: 'cover',
+                            background: '#000', display: 'block',
                           }} />
                           <canvas ref={canvasRef} style={{ display: 'none' }} />
                           <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
@@ -1027,22 +1105,17 @@ const AdminPanel = () => {
                           </div>
                         </div>
                       )}
-                      {previewImg && !cameraOn && (
-                        <p style={{ marginTop: '8px', fontSize: '0.72rem', color: '#2d6a4f', fontFamily: 'sans-serif' }}>
-                          ✓ Photo captured
-                        </p>
-                      )}
                     </div>
                   )}
 
                   {imgTab === 'url' && (
                     <div>
-                      <input value={form.img.startsWith('data:') ? '' : form.img}
+                      <input
+                        value={form.img.startsWith('data:') ? '' : form.img}
                         onChange={e => handleChange('img', e.target.value)}
-                        placeholder="https://images.unsplash.com/..." style={inputStyle} />
-                      <p style={{ fontSize: '0.65rem', color: '#bbb', fontFamily: 'sans-serif', margin: '8px 0 0', lineHeight: '1.7' }}>
-                        Paste from Unsplash, Google Images or imgbb.com
-                      </p>
+                        placeholder="https://res.cloudinary.com/..."
+                        style={inputStyle}
+                      />
                     </div>
                   )}
                 </div>
@@ -1055,21 +1128,22 @@ const AdminPanel = () => {
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px' }}>
-                  <button type="submit" style={{
+                  <button type="submit" disabled={prodUploading} style={{
                     flex: 1, padding: '14px', background: '#1a1a1a', color: '#fff',
-                    border: 'none', cursor: 'pointer', fontSize: '0.68rem',
+                    border: 'none', cursor: prodUploading ? 'wait' : 'pointer', fontSize: '0.68rem',
                     letterSpacing: '3px', textTransform: 'uppercase', fontFamily: 'sans-serif',
                   }}
-                    onMouseEnter={e => e.target.style.background = '#c9a96e'}
+                    onMouseEnter={e => { if (!prodUploading) e.target.style.background = '#c9a96e'; }}
                     onMouseLeave={e => e.target.style.background = '#1a1a1a'}>
                     {editingId ? 'Update Product' : 'Add to Shop'}
                   </button>
                   {editingId && (
-                    <button type="button" onClick={() => { setForm(EMPTY_FORM); setPreviewImg(''); setEditingId(null); }} style={{
-                      padding: '14px 20px', background: 'none', border: '1px solid #ddd',
-                      cursor: 'pointer', fontSize: '0.68rem', letterSpacing: '2px',
-                      textTransform: 'uppercase', fontFamily: 'sans-serif', color: '#888',
-                    }}>
+                    <button type="button"
+                      onClick={() => { setForm(EMPTY_FORM); setPreviewImg(''); setEditingId(null); }} style={{
+                        padding: '14px 20px', background: 'none', border: '1px solid #ddd',
+                        cursor: 'pointer', fontSize: '0.68rem', letterSpacing: '2px',
+                        textTransform: 'uppercase', fontFamily: 'sans-serif', color: '#888',
+                      }}>
                       Cancel
                     </button>
                   )}
@@ -1086,8 +1160,10 @@ const AdminPanel = () => {
               <div style={{ background: '#fff', overflow: 'hidden', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
                 <div style={{ height: '260px', background: '#f5f0ea',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                  {previewImg ? (
-                    <img src={previewImg} alt="Preview" onError={e => e.target.style.display = 'none'}
+                  {prodUploading ? (
+                    <p style={{ color: '#c9a96e', fontFamily: 'sans-serif', fontSize: '0.8rem' }}>Uploading...</p>
+                  ) : previewImg ? (
+                    <img src={previewImg} alt="Preview"
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
                     <p style={{ color: '#ccc', fontSize: '0.78rem', fontFamily: 'sans-serif', letterSpacing: '2px' }}>
@@ -1126,13 +1202,13 @@ const AdminPanel = () => {
           </div>
         )}
 
-        {/* TAB 2 — MANAGE PRODUCTS */}
+        {/* ─── TAB 2 — MANAGE PRODUCTS ─── */}
         {activeTab === 'manage' && (
           <div>
             {products.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '60px 20px' }}>
                 <p style={{ fontSize: '3rem', marginBottom: '16px' }}>📦</p>
-                <p style={{ color: '#bbb', fontFamily: "'Georgia', serif", fontSize: '1.1rem', letterSpacing: '2px' }}>
+                <p style={{ color: '#bbb', fontFamily: "'Georgia', serif", fontSize: '1.1rem' }}>
                   No products added yet.
                 </p>
                 <button onClick={() => setActiveTab('add')} style={{
@@ -1152,8 +1228,7 @@ const AdminPanel = () => {
                 {products.map(product => (
                   <div key={product.id} style={{
                     background: '#fff', overflow: 'hidden',
-                    boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
-                    display: 'flex', flexDirection: 'column',
+                    boxShadow: '0 2px 12px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column',
                   }}>
                     <div style={{ height: '180px', overflow: 'hidden', position: 'relative' }}>
                       <img src={product.img} alt={product.name}
@@ -1161,8 +1236,8 @@ const AdminPanel = () => {
                       <span style={{
                         position: 'absolute', top: '10px', left: '10px',
                         background: 'rgba(201,169,110,0.9)', padding: '3px 8px',
-                        fontSize: '0.55rem', letterSpacing: '1.5px', textTransform: 'uppercase',
-                        color: '#fff', fontFamily: 'sans-serif',
+                        fontSize: '0.55rem', letterSpacing: '1.5px',
+                        textTransform: 'uppercase', color: '#fff', fontFamily: 'sans-serif',
                       }}>
                         {product.category}
                       </span>
@@ -1172,7 +1247,8 @@ const AdminPanel = () => {
                         fontSize: '0.95rem', color: '#1a1a1a', margin: '0 0 6px' }}>
                         {product.name}
                       </h4>
-                      <p style={{ fontFamily: "'Georgia', serif", fontSize: '1rem', color: '#c9a96e', margin: '0 0 14px' }}>
+                      <p style={{ fontFamily: "'Georgia', serif", fontSize: '1rem',
+                        color: '#c9a96e', margin: '0 0 14px' }}>
                         ₹{product.price.toLocaleString('en-IN')}
                       </p>
                       <div style={{ display: 'flex', gap: '8px' }}>
@@ -1205,7 +1281,7 @@ const AdminPanel = () => {
           </div>
         )}
 
-        {/* TAB 3 — IMAGE MANAGER */}
+        {/* ─── TAB 3 — IMAGE MANAGER ─── */}
         {activeTab === 'images' && <ImageManager />}
 
       </div>
@@ -1213,6 +1289,9 @@ const AdminPanel = () => {
   );
 };
 
+// ─────────────────────────────────────────────
+// SHARED STYLES
+// ─────────────────────────────────────────────
 const labelStyle = {
   display: 'block', fontSize: '0.62rem',
   letterSpacing: '2px', textTransform: 'uppercase',
