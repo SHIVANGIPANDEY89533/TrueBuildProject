@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useSiteImages } from '../context/SiteImagesContext';
 
 const PROJECTS = [
   {
@@ -43,6 +44,7 @@ const Architectural = () => {
   const [isMobile,   setIsMobile]   = useState(window.innerWidth < 768);
   const [hoveredIdx, setHoveredIdx] = useState(null);
   const [activeProj, setActiveProj] = useState(0);
+  const { images } = useSiteImages(); // ✅ Get images from context
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -50,13 +52,21 @@ const Architectural = () => {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
+  // Map Unsplash URLs to context images
+  const PROJECT_IMAGES = [
+    images['architectural.card1'],
+    images['architectural.card2'],
+    images['architectural.card3'],
+    images['architectural.card4'],
+  ];
+
   return (
     <main style={{ paddingTop: '80px', minHeight: '100vh', background: '#faf8f5' }}>
 
       {/* ── HERO ── */}
       <div style={{ position: 'relative', height: isMobile ? '50vh' : '65vh', overflow: 'hidden' }}>
         <img
-          src="https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=1600&q=80"
+          src={images['architectural.image']}
           alt="Architectural"
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
         />
@@ -233,7 +243,7 @@ const Architectural = () => {
         }}>
           <div style={{ height: isMobile ? '260px' : '420px', overflow: 'hidden' }}>
             <img
-              src={PROJECTS[activeProj].img}
+              src={PROJECT_IMAGES[activeProj] || PROJECTS[activeProj].img}
               alt={PROJECTS[activeProj].title}
               style={{ width: '100%', height: '100%', objectFit: 'cover',
                 display: 'block', transition: 'opacity 0.3s' }}

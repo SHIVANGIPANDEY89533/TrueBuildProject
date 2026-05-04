@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AnimatedCounter, MarqueeText, ServiceCard } from '../components';
 import { SERVICES, STUDIO_STORY, PROJECTS } from '../constants/data';
 import { useSiteImages } from '../context/SiteImagesContext';
+import { useContent } from '../context/ContentContext';
 
 const KnowMoreBtn = ({ to, light = false, label = 'Know More' }) => (
   <Link to={to} style={{
@@ -32,6 +33,7 @@ const KnowMoreBtn = ({ to, light = false, label = 'Know More' }) => (
 const Home = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { images, getSectionImages } = useSiteImages(); // ✅
+  const { content } = useContent(); // ✅ Get content from context
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -90,7 +92,7 @@ const Home = () => {
             textTransform: 'uppercase', color: '#bbb',
             marginBottom: '10px', fontFamily: 'sans-serif',
           }}>Started in</p>
-          <AnimatedCounter target={2018} />
+          <AnimatedCounter target={parseInt(content['home.started.year'] || '2018')} />
         </div>
         {!isMobile && <div style={{ width: '1px', height: '140px', background: '#ddd', flexShrink: 0 }} />}
         <div style={{ flex: 1, maxWidth: '580px' }}>
@@ -105,13 +107,14 @@ const Home = () => {
             fontWeight: '300', color: '#1a1a1a',
             lineHeight: '1.6', marginBottom: '22px',
           }}>
-            It began at home, like it does with all great things.
+            {content['home.story.title'] || 'It began at home, like it does with all great things.'}
           </h2>
           <p style={{
             fontSize: '0.86rem', color: '#888',
             lineHeight: '2.2', margin: 0, fontFamily: 'sans-serif',
+            whiteSpace: 'pre-wrap',
           }}>
-            {STUDIO_STORY}
+            {content['home.story.text'] || STUDIO_STORY}
           </p>
           <KnowMoreBtn to="/about" label="Know More" />
         </div>

@@ -8,15 +8,7 @@ import logo from '../assets/images/logo.jpeg';
 const NAV_LINKS = [
   { label: 'Home',     path: '/'         },
   { label: 'About',    path: '/about'    },
-  {
-    label: 'Services', path: '/services',
-    sub: [
-      { label: 'Architectural', path: '/services/architectural' },
-      { label: 'Residential',   path: '/services/residential'   },
-      { label: 'Commercial',    path: '/services/commercial'    },
-      { label: 'Hospitality',   path: '/services/hospitality'   },
-    ],
-  },
+  { label: 'Services', path: '/services' },
   { label: 'Bespoke',  path: '/bespoke'  },
   { label: 'Shop',     path: '/shop'     },
   { label: 'Contact',  path: '/contact'  },

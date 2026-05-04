@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useSiteImages } from '../context/SiteImagesContext';
 
 // ── Animated Counter Hook
 const useCounter = (target, duration = 2000, startCounting) => {
@@ -69,6 +70,7 @@ const PROCESS_STEPS = [
 const Overview = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [statsVisible, setStatsVisible] = useState(false);
+  const { images } = useSiteImages();
   const statsRef = useRef(null);
 
   useEffect(() => {
@@ -97,7 +99,7 @@ const Overview = () => {
       {/* SECTION 1: HERO BANNER */}
       <div style={{ position: 'relative', height: isMobile ? '50vh' : '65vh', overflow: 'hidden' }}>
         <img
-          src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1600&q=80"
+          src={images['overview.hero']}
           alt="Construction Overview"
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
         />
@@ -287,7 +289,7 @@ const Overview = () => {
       <section style={{ position: 'relative', overflow: 'hidden',
         padding: isMobile ? '80px 24px' : '100px 60px', boxSizing: 'border-box' }}>
         <img
-          src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1600&q=80"
+          src={images['overview.cta']}
           alt="CTA"
           style={{ position: 'absolute', inset: 0, width: '100%',
             height: '100%', objectFit: 'cover', zIndex: 0 }}

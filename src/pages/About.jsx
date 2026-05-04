@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSiteImages } from '../context/SiteImagesContext';
+import { useContent } from '../context/ContentContext';
 
 const About = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [hoveredCard, setHoveredCard] = useState(null);
   const { images } = useSiteImages();
+  const { content } = useContent(); // ✅ Get content from context
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -34,7 +36,7 @@ const About = () => {
           fontWeight: '300', letterSpacing: '5px',
           color: '#1a1a1a', textTransform: 'uppercase', margin: '0 0 12px',
         }}>
-          Two engineers.
+          {content['about.title.1'] || 'Two engineers.'}
         </h1>
         <h1 style={{
           fontFamily: "'Georgia', serif",
@@ -42,7 +44,7 @@ const About = () => {
           fontWeight: '300', letterSpacing: '5px',
           color: '#1a1a1a', textTransform: 'uppercase', margin: '0 0 8px',
         }}>
-          One vision.
+          {content['about.title.2'] || 'One vision.'}
         </h1>
         <h2 style={{
           fontFamily: "'Georgia', serif",

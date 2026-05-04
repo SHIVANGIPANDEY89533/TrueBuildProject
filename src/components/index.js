@@ -6,5 +6,6 @@ export { default as ServiceCard     } from './ServiceCard';
 export { default as CartDrawer      } from './CartDrawer';
 export { CartProvider, useCart      } from './CartContext';
 export { AuthProvider, useAuth      } from './AuthContext'; // ✅ NEW
+export { ContentProvider, useContent } from '../context/ContentContext'; // ✅ Content management
 // Add this line to your components/index.js
 export { default as ScrollToTop } from './ScrollToTop';

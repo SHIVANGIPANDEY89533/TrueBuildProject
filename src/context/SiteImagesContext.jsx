@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db } from '../config/firebase';
 import { ref, onValue, set, remove } from 'firebase/database';
 
+
 import img1  from '../assets/images/img1.jpeg';
 import img2  from '../assets/images/img2.jpeg';
 import img3  from '../assets/images/img3.jpeg';
@@ -15,6 +16,8 @@ import img10 from '../assets/images/img10.jpeg';
 import img11 from '../assets/images/img11.jpeg';
 import img12 from '../assets/images/img12.jpeg';
 import img13 from '../assets/images/img13.jpeg';
+import img14 from '../assets/images/img 14.jpeg';
+import img15 from '../assets/images/img15.jpeg';
 
 export const DEFAULT_IMAGES = {
   'home.hero.slide1':        img9,
@@ -73,11 +76,45 @@ export const DEFAULT_IMAGES = {
   'shop.banner1':            img6,
   'shop.banner2':            img7,
   'contact.hero':            img8,
+  // ── Gallery Page Images ──────────────────────
+  'gallery.hero':            img10,
+  'gallery.item1':           img1,   // Interiors — Living Room — Juhu Residence
+  'gallery.item2':           img4,   // Furniture — Bespoke Sofa Collection
+  'gallery.item3':           img13,  // Decor — Curated Artefacts
+  'gallery.item4':           img5,   // Interiors — Master Bedroom — Bandra
+  'gallery.item5':           img12,  // Studio — Studio Flagship — Raghuvanshi
+  'gallery.item6':           img6,   // Furniture — Custom Dining Table
+  'gallery.item7':           img7,   // Studio — Juhu Showroom — Main Hall
+  'gallery.item8':           img14,  // Decor — Art Wall — Private Residence
+  'gallery.item9':           img9,   // Interiors — Home Office — Khar
+  'gallery.item10':          img3,   // Furniture — Statement Chair — Gold Edition
+  'gallery.item11':          img11,  // Studio — Design Consultation Room
+  'gallery.item12':          img15,  // Decor — Signature Lamp Collection
+  // ── Overview Page Images ─────────────────────
+  'overview.hero':           img2,
+  'overview.cta':            img8,
+  // Service card images (was hardcoded Unsplash)
+  'services.card.construction': 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&q=80',
+  'services.card.mep':          'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=800&q=80',
+  'services.card.finishing':    'https://images.unsplash.com/photo-1562438668-bcf0ca6578f0?w=800&q=80',
+  'services.card.interior':     'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&q=80',
+  // Contact & Shop hero images
+  'contact.image':              'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1600&q=80',
+  'shop.contact.image':         'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1400&q=80',
+  // Architectural images
+  'architectural.card1':        'https://images.unsplash.com/photo-1613977257363-707ba9348227?w=800&q=80',
+  'architectural.card2':        'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80',
+  'architectural.card3':        'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80',
+  'architectural.card4':        'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80',
+  'architectural.image':        'https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=1600&q=80',
+  'architectural.detail':       'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80',
 };
 
 export const IMAGE_SECTIONS = [
   { key: 'home',          label: '🏠 Home Page'     },
   { key: 'about',         label: '👤 About Page'     },
+  { key: 'gallery',       label: '🖼️ Gallery'       },
+  { key: 'overview',      label: '📖 Overview'      },
   { key: 'services',      label: '🛠️ Services Hub'  },
   { key: 'architectural', label: '🏛️ Architectural' },
   { key: 'residential',   label: '🏡 Residential'   },
@@ -146,6 +183,38 @@ export const IMAGE_LABELS = {
   'shop.banner1':            'Promo Banner 1 (img6)',
   'shop.banner2':            'Promo Banner 2 (img7)',
   'contact.hero':            'Hero Banner (img8)',
+  // Gallery Page
+  'gallery.hero':            'Gallery Hero Banner (img10)',
+  'gallery.item1':           'Interiors — Living Room, Juhu Residence (img1)',
+  'gallery.item2':           'Furniture — Bespoke Sofa Collection (img4)',
+  'gallery.item3':           'Decor — Curated Artefacts (img13)',
+  'gallery.item4':           'Interiors — Master Bedroom, Bandra (img5)',
+  'gallery.item5':           'Studio — Studio Flagship, Raghuvanshi (img12)',
+  'gallery.item6':           'Furniture — Custom Dining Table (img6)',
+  'gallery.item7':           'Studio — Juhu Showroom, Main Hall (img7)',
+  'gallery.item8':           'Decor — Art Wall, Private Residence (img14)',
+  'gallery.item9':           'Interiors — Home Office, Khar (img9)',
+  'gallery.item10':          'Furniture — Statement Chair, Gold Edition (img3)',
+  'gallery.item11':          'Studio — Design Consultation Room (img11)',
+  'gallery.item12':          'Decor — Signature Lamp Collection (img15)',
+  // Overview Page
+  'overview.hero':           'Overview Hero Banner (img2)',
+  'overview.cta':            'Overview CTA Banner (img8)',
+  // Service card images
+  'services.card.construction': 'Construction Card',
+  'services.card.mep':          'MEP Services Card',
+  'services.card.finishing':    'Finishing & Aesthetics Card',
+  'services.card.interior':     'Interior Design Card',
+  // Contact & Shop images
+  'contact.image':              'Contact Page Image',
+  'shop.contact.image':         'Shop Contact Image',
+  // Architectural images
+  'architectural.card1':        'Architectural Project Card 1',
+  'architectural.card2':        'Architectural Project Card 2',
+  'architectural.card3':        'Architectural Project Card 3',
+  'architectural.card4':        'Architectural Project Card 4',
+  'architectural.image':        'Architectural Hero Image',
+  'architectural.detail':       'Architectural Detail Image',
 };
 
 // ✅ Firebase key safe format — dots ko underscore mein convert karo

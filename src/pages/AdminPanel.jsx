@@ -2,12 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SHOP_CATEGORIES } from '../constants/data';
 import { useAuth } from '../components';
+import { useContent } from '../context/ContentContext';
 import {
   useSiteImages,
   IMAGE_SECTIONS,
   IMAGE_LABELS,
   DEFAULT_IMAGES,
 } from '../context/SiteImagesContext';
+import { useProjects, PROJECT_CATEGORIES } from '../context/ProjectsContext';
+import { useServices } from '../context/ServicesContext';
 
 // ✅ Cloudinary Config
 const CLOUDINARY_CLOUD_NAME    = 'dvcol26qc';
@@ -768,6 +771,912 @@ const ImageManager = () => {
 };
 
 // ─────────────────────────────────────────────
+// PROJECT MANAGER
+// ─────────────────────────────────────────────
+const EMPTY_PROJECT = {
+  title: '', category: 'Residential', description: '',
+  location: '', year: new Date().getFullYear().toString(), img: '',
+};
+
+const ProjectManager = () => {
+  const { projects, addProject, updateProject, deleteProject } = useProjects();
+  const [form, setForm]             = useState(EMPTY_PROJECT);
+  const [editingId, setEditingId]   = useState(null);
+  const [previewImg, setPreviewImg] = useState('');
+  const [uploading, setUploading]   = useState(false);
+  const [uploadMode, setUploadMode] = useState('upload');
+  const [successMsg, setSuccessMsg] = useState('');
+  const [showForm, setShowForm]     = useState(false);
+  const [filterCat, setFilterCat]   = useState('All');
+  const [isMobile, setIsMobile]     = useState(window.innerWidth < 768);
+  const fileRef = useRef(null);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const handleField = (field, val) => {
+    setForm(prev => ({ ...prev, [field]: val }));
+    if (field === 'img') setPreviewImg(val);
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    setPreviewImg('');
+    try {
+      const url = await uploadToCloudinary(file);
+      setPreviewImg(url);
+      setForm(prev => ({ ...prev, img: url }));
+    } catch { alert('Upload failed! Check your internet connection.'); }
+    finally { setUploading(false); }
+  };
+
+  const openAdd = () => {
+    setForm(EMPTY_PROJECT); setPreviewImg('');
+    setEditingId(null); setShowForm(true);
+  };
+
+  const openEdit = (p) => {
+    setForm({
+      title: p.title, category: p.category,
+      description: p.description || '',
+      location: p.location || '', year: p.year || '',
+      img: p.img,
+    });
+    setPreviewImg(p.img);
+    setEditingId(p.id); setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!form.title || !form.img) return alert('Title aur Image required hai!');
+    if (editingId) {
+      updateProject(editingId, { ...form, isDefault: false });
+      setSuccessMsg('✓ Project updated successfully!');
+    } else {
+      addProject(form);
+      setSuccessMsg('✓ Project added to portfolio!');
+    }
+    setForm(EMPTY_PROJECT); setPreviewImg('');
+    setEditingId(null); setShowForm(false);
+    setTimeout(() => setSuccessMsg(''), 3000);
+  };
+
+  const handleDelete = (id) => {
+    if (!window.confirm('Is project ko permanently delete karo?')) return;
+    deleteProject(id);
+    setSuccessMsg('✓ Project deleted.');
+    setTimeout(() => setSuccessMsg(''), 3000);
+  };
+
+  const filtered = filterCat === 'All'
+    ? projects.filter(p => !p.isDefault)
+    : projects.filter(p => !p.isDefault && p.category === filterCat);
+
+  const allManaged = projects.filter(p => !p.isDefault);
+
+  return (
+    <div style={{ minHeight: '500px' }}>
+
+      {successMsg && (
+        <div style={{
+          background: '#f0faf0', border: '1px solid #c3e6cb',
+          padding: '12px 20px', marginBottom: '20px',
+          fontSize: '0.82rem', color: '#2d6a4f', fontFamily: 'sans-serif',
+        }}>{successMsg}</div>
+      )}
+
+      {/* ── ADD / EDIT FORM ── */}
+      {showForm && (
+        <div style={{
+          background: '#fff', padding: isMobile ? '24px' : '32px',
+          boxShadow: '0 2px 24px rgba(0,0,0,0.08)',
+          marginBottom: '32px', border: '1px solid #e8e3db',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <h3 style={{ fontFamily: "'Georgia', serif", fontWeight: '300',
+              fontSize: '1.2rem', color: '#1a1a1a', margin: 0 }}>
+              {editingId ? '✎ Edit Project' : '+ New Project'}
+            </h3>
+            <button onClick={() => { setShowForm(false); setEditingId(null); }} style={{
+              background: 'none', border: 'none', fontSize: '1.3rem',
+              cursor: 'pointer', color: '#bbb',
+            }}>✕</button>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '40px' }}>
+
+              {/* LEFT — Fields */}
+              <div>
+                <div style={{ marginBottom: '18px' }}>
+                  <label style={labelStyle}>Project Title *</label>
+                  <input value={form.title} onChange={e => handleField('title', e.target.value)}
+                    placeholder="e.g. Modern Villa — Amroha"
+                    style={inputStyle} required />
+                </div>
+
+                <div style={{ marginBottom: '18px' }}>
+                  <label style={labelStyle}>Category *</label>
+                  <select value={form.category} onChange={e => handleField('category', e.target.value)}
+                    style={{ ...inputStyle, cursor: 'pointer' }}>
+                    {PROJECT_CATEGORIES.filter(c => c !== 'All').map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '18px' }}>
+                  <div>
+                    <label style={labelStyle}>Location</label>
+                    <input value={form.location} onChange={e => handleField('location', e.target.value)}
+                      placeholder="e.g. Amroha, UP" style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Year</label>
+                    <input value={form.year} onChange={e => handleField('year', e.target.value)}
+                      placeholder="e.g. 2024" style={inputStyle} maxLength={4} />
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '18px' }}>
+                  <label style={labelStyle}>Description / Caption</label>
+                  <textarea value={form.description}
+                    onChange={e => handleField('description', e.target.value)}
+                    placeholder="Brief project description shown in the lightbox..."
+                    rows={4} style={{ ...inputStyle, resize: 'vertical', minHeight: '100px', lineHeight: '1.7' }} />
+                </div>
+
+                {/* Image Upload */}
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={labelStyle}>Project Image *</label>
+                  <div style={{ display: 'flex', gap: '2px', marginBottom: '12px' }}>
+                    {[{ key: 'upload', label: '📁 Upload' }, { key: 'url', label: '🔗 URL' }].map(m => (
+                      <button key={m.key} type="button" onClick={() => setUploadMode(m.key)} style={{
+                        flex: 1, padding: '9px',
+                        background: uploadMode === m.key ? '#1a1a1a' : '#f5f0ea',
+                        color: uploadMode === m.key ? '#fff' : '#888',
+                        border: 'none', cursor: 'pointer',
+                        fontSize: '0.65rem', letterSpacing: '1.5px',
+                        textTransform: 'uppercase', fontFamily: 'sans-serif',
+                      }}>{m.label}</button>
+                    ))}
+                  </div>
+
+                  {uploadMode === 'upload' && (
+                    <div>
+                      <input ref={fileRef} type="file" accept="image/*"
+                        onChange={handleFileUpload} style={{ display: 'none' }} />
+                      <div onClick={() => !uploading && fileRef.current.click()} style={{
+                        border: '2px dashed #e8e3db', padding: '28px 20px',
+                        textAlign: 'center', cursor: uploading ? 'wait' : 'pointer',
+                        background: '#fdfcfb',
+                      }}>
+                        {uploading ? (
+                          <>
+                            <div style={{
+                              width: '28px', height: '28px',
+                              border: '2px solid #e8e3db', borderTop: '2px solid #c9a96e',
+                              borderRadius: '50%', animation: 'spin 0.8s linear infinite',
+                              margin: '0 auto 10px',
+                            }} />
+                            <p style={{ fontFamily: 'sans-serif', fontSize: '0.75rem', color: '#c9a96e', margin: 0 }}>
+                              Uploading to Cloudinary...
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p style={{ fontSize: '1.8rem', margin: '0 0 8px' }}>📁</p>
+                            <p style={{ fontFamily: 'sans-serif', fontSize: '0.78rem', color: '#888', margin: 0 }}>
+                              Click to select image
+                            </p>
+                          </>
+                        )}
+                      </div>
+                      {previewImg && previewImg.startsWith('http') && (
+                        <p style={{ fontFamily: 'sans-serif', fontSize: '0.7rem', color: '#2ecc71', marginTop: '8px' }}>
+                          ✓ Image uploaded successfully!
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {uploadMode === 'url' && (
+                    <input
+                      value={form.img.startsWith('data:') ? '' : form.img}
+                      onChange={e => handleField('img', e.target.value)}
+                      placeholder="https://res.cloudinary.com/..."
+                      style={inputStyle} />
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button type="submit" disabled={uploading} style={{
+                    flex: 1, padding: '13px', background: '#1a1a1a', color: '#fff',
+                    border: 'none', cursor: uploading ? 'wait' : 'pointer',
+                    fontSize: '0.65rem', letterSpacing: '3px',
+                    textTransform: 'uppercase', fontFamily: 'sans-serif',
+                  }}
+                    onMouseEnter={e => { if (!uploading) e.target.style.background = '#c9a96e'; }}
+                    onMouseLeave={e => e.target.style.background = '#1a1a1a'}>
+                    {uploading ? 'Uploading...' : editingId ? '✓ Update Project' : '✓ Add Project'}
+                  </button>
+                  <button type="button" onClick={() => { setShowForm(false); setEditingId(null); }} style={{
+                    padding: '13px 16px', background: 'transparent',
+                    border: '1px solid #e8e3db', color: '#888',
+                    cursor: 'pointer', fontSize: '0.6rem', letterSpacing: '1.5px',
+                    textTransform: 'uppercase', fontFamily: 'sans-serif',
+                  }}>Cancel</button>
+                </div>
+              </div>
+
+              {/* RIGHT — Live Preview */}
+              <div>
+                <p style={{ fontFamily: 'sans-serif', fontSize: '0.58rem',
+                  letterSpacing: '3px', textTransform: 'uppercase', color: '#bbb',
+                  marginBottom: '14px' }}>Live Preview</p>
+                <div style={{ position: 'relative', height: '280px', overflow: 'hidden', background: '#f0ebe3' }}>
+                  {previewImg ? (
+                    <img src={previewImg} alt="preview"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      onError={e => e.target.style.display = 'none'} />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <p style={{ color: '#ccc', fontFamily: 'sans-serif', fontSize: '0.75rem' }}>
+                        {uploading ? 'Uploading...' : 'Image preview'}
+                      </p>
+                    </div>
+                  )}
+                  <div style={{
+                    position: 'absolute', bottom: 0, left: 0, right: 0,
+                    background: 'linear-gradient(transparent, rgba(0,0,0,0.65))',
+                    padding: '20px 18px',
+                  }}>
+                    <p style={{ color: '#c9a96e', fontSize: '0.54rem', letterSpacing: '3px',
+                      textTransform: 'uppercase', margin: '0 0 4px', fontFamily: 'sans-serif' }}>
+                      {form.category || 'Category'}
+                    </p>
+                    <p style={{ color: '#fff', fontFamily: "'Georgia', serif",
+                      fontSize: '1rem', fontWeight: '300',
+                      letterSpacing: '2px', textTransform: 'uppercase', margin: '0 0 3px' }}>
+                      {form.title || 'Project Title'}
+                    </p>
+                    {(form.location || form.year) && (
+                      <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.62rem',
+                        fontFamily: 'sans-serif', margin: 0 }}>
+                        📍 {form.location}{form.location && form.year ? ' · ' : ''}{form.year}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {form.description && (
+                  <div style={{ background: '#fff', padding: '16px', border: '1px solid #e8e3db' }}>
+                    <p style={{ fontFamily: "'Georgia', serif", fontSize: '0.82rem',
+                      color: '#555', lineHeight: '1.8', margin: 0 }}>
+                      {form.description}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* ── HEADER + FILTER ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between',
+        alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          <h3 style={{ fontFamily: "'Georgia', serif", fontSize: '1.1rem',
+            fontWeight: '300', color: '#1a1a1a', margin: '0 0 4px' }}>
+            Portfolio Projects
+            <span style={{ fontFamily: 'sans-serif', fontSize: '0.7rem',
+              color: '#bbb', marginLeft: '10px' }}>({allManaged.length} added)</span>
+          </h3>
+          <p style={{ fontFamily: 'sans-serif', fontSize: '0.72rem', color: '#aaa', margin: 0 }}>
+            Ye projects public Projects page par show honge
+          </p>
+        </div>
+        {!showForm && (
+          <button onClick={openAdd} style={{
+            padding: '10px 22px', background: '#c9a96e', color: '#fff',
+            border: 'none', cursor: 'pointer',
+            fontSize: '0.65rem', letterSpacing: '2px',
+            textTransform: 'uppercase', fontFamily: 'sans-serif',
+          }}
+            onMouseEnter={e => e.currentTarget.style.background = '#1a1a1a'}
+            onMouseLeave={e => e.currentTarget.style.background = '#c9a96e'}>
+            + Add New Project
+          </button>
+        )}
+      </div>
+
+      {/* Category Filter */}
+      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '24px' }}>
+        {PROJECT_CATEGORIES.map(cat => (
+          <button key={cat} onClick={() => setFilterCat(cat)} style={{
+            padding: '6px 14px', border: '1px solid',
+            borderColor: filterCat === cat ? '#1a1a1a' : '#ddd',
+            background: filterCat === cat ? '#1a1a1a' : 'transparent',
+            color: filterCat === cat ? '#fff' : '#888',
+            fontSize: '0.58rem', letterSpacing: '2px',
+            textTransform: 'uppercase', fontFamily: 'sans-serif',
+            cursor: 'pointer', transition: 'all 0.2s',
+          }}>{cat}</button>
+        ))}
+      </div>
+
+      {/* ── PROJECT CARDS ── */}
+      {allManaged.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px 20px',
+          background: '#fff', border: '1px solid #e8e3db' }}>
+          <p style={{ fontSize: '3rem', marginBottom: '12px' }}>🏗️</p>
+          <p style={{ fontFamily: "'Georgia', serif", color: '#bbb', fontSize: '1rem', marginBottom: '20px' }}>
+            Abhi tak koi project add nahi kiya gaya.
+          </p>
+          <button onClick={openAdd} style={{
+            padding: '12px 28px', background: '#1a1a1a', color: '#fff',
+            border: 'none', cursor: 'pointer', fontSize: '0.65rem',
+            letterSpacing: '3px', textTransform: 'uppercase', fontFamily: 'sans-serif',
+          }}>+ Add First Project</button>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+          <p style={{ color: '#bbb', fontFamily: 'sans-serif', fontSize: '0.85rem' }}>
+            Is category mein koi project nahi.
+          </p>
+        </div>
+      ) : (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))',
+          gap: '16px',
+        }}>
+          {filtered.map(p => (
+            <div key={p.id} style={{
+              background: '#fff', overflow: 'hidden',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
+              display: 'flex', flexDirection: 'column',
+            }}>
+              <div style={{ position: 'relative', height: '200px', overflow: 'hidden' }}>
+                <img src={p.img} alt={p.title}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  onError={e => e.target.src = 'https://via.placeholder.com/400x300/f5f0ea/bbb?text=No+Image'}
+                />
+                <span style={{
+                  position: 'absolute', top: '10px', left: '10px',
+                  background: 'rgba(201,169,110,0.92)', color: '#fff',
+                  fontSize: '0.52rem', padding: '3px 9px',
+                  letterSpacing: '1.5px', textTransform: 'uppercase', fontFamily: 'sans-serif',
+                }}>{p.category}</span>
+              </div>
+              <div style={{ padding: '16px', flex: 1 }}>
+                <h4 style={{ fontFamily: "'Georgia', serif", fontWeight: '300',
+                  fontSize: '1rem', color: '#1a1a1a', margin: '0 0 4px' }}>
+                  {p.title}
+                </h4>
+                {(p.location || p.year) && (
+                  <p style={{ fontFamily: 'sans-serif', fontSize: '0.65rem',
+                    color: '#aaa', margin: '0 0 8px' }}>
+                    📍 {p.location}{p.location && p.year ? ' · ' : ''}{p.year}
+                  </p>
+                )}
+                {p.description && (
+                  <p style={{ fontFamily: 'sans-serif', fontSize: '0.75rem',
+                    color: '#999', lineHeight: '1.6', margin: '0 0 14px',
+                    display: '-webkit-box', WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {p.description}
+                  </p>
+                )}
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button onClick={() => openEdit(p)} style={{
+                    flex: 1, padding: '8px', background: 'none',
+                    border: '1px solid #1a1a1a', cursor: 'pointer',
+                    fontSize: '0.6rem', letterSpacing: '2px',
+                    textTransform: 'uppercase', fontFamily: 'sans-serif', color: '#1a1a1a',
+                  }}
+                    onMouseEnter={e => { e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.color = '#fff'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#1a1a1a'; }}>
+                    ✎ Edit
+                  </button>
+                  <button onClick={() => handleDelete(p.id)} style={{
+                    flex: 1, padding: '8px', background: 'none',
+                    border: '1px solid #e74c3c', cursor: 'pointer',
+                    fontSize: '0.6rem', letterSpacing: '2px',
+                    textTransform: 'uppercase', fontFamily: 'sans-serif', color: '#e74c3c',
+                  }}
+                    onMouseEnter={e => { e.currentTarget.style.background = '#e74c3c'; e.currentTarget.style.color = '#fff'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#e74c3c'; }}>
+                    ✕ Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────
+// SERVICE MANAGER
+// ─────────────────────────────────────────────
+const EMPTY_SERVICE = {
+  title: '', subtitle: '', tag: '', desc: '', img: '',
+  points: ['', '', '', '', ''],
+};
+
+const ServiceManager = () => {
+  const { services, addService, updateService, deleteService } = useServices();
+  const [form, setForm]             = useState(EMPTY_SERVICE);
+  const [editingId, setEditingId]   = useState(null);
+  const [previewImg, setPreviewImg] = useState('');
+  const [uploading, setUploading]   = useState(false);
+  const [uploadMode, setUploadMode] = useState('upload');
+  const [successMsg, setSuccessMsg] = useState('');
+  const [showForm, setShowForm]     = useState(false);
+  const [isMobile, setIsMobile]     = useState(window.innerWidth < 768);
+  const fileRef = useRef(null);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const handleField = (field, val) => {
+    setForm(prev => ({ ...prev, [field]: val }));
+    if (field === 'img') setPreviewImg(val);
+  };
+
+  const handlePoint = (idx, val) => {
+    const pts = [...form.points];
+    pts[idx] = val;
+    setForm(prev => ({ ...prev, points: pts }));
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true); setPreviewImg('');
+    try {
+      const url = await uploadToCloudinary(file);
+      setPreviewImg(url);
+      setForm(prev => ({ ...prev, img: url }));
+    } catch { alert('Upload failed!'); }
+    finally { setUploading(false); }
+  };
+
+  const openAdd = () => { setForm(EMPTY_SERVICE); setPreviewImg(''); setEditingId(null); setShowForm(true); };
+
+  const openEdit = (s) => {
+    const pts = [...(s.points || []), '', '', '', '', ''].slice(0, 5);
+    setForm({ title: s.title, subtitle: s.subtitle || '', tag: s.tag || '',
+      desc: s.desc, img: s.img || '', points: pts });
+    setPreviewImg(s.img || '');
+    setEditingId(s.id); setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!form.title) return alert('Title required!');
+    const cleanPts = form.points.filter(p => p.trim());
+    const data = { ...form, points: cleanPts };
+    if (editingId) {
+      updateService(editingId, { ...data, isDefault: false });
+      setSuccessMsg('✓ Service updated!');
+    } else {
+      addService(data);
+      setSuccessMsg('✓ Service added!');
+    }
+    setForm(EMPTY_SERVICE); setPreviewImg('');
+    setEditingId(null); setShowForm(false);
+    setTimeout(() => setSuccessMsg(''), 3000);
+  };
+
+  const handleDelete = (id) => {
+    if (!window.confirm('Delete this service?')) return;
+    deleteService(id);
+    setSuccessMsg('✓ Service deleted.');
+    setTimeout(() => setSuccessMsg(''), 3000);
+  };
+
+  return (
+    <div style={{ minHeight: '400px' }}>
+      {successMsg && (
+        <div style={{ background: '#f0faf0', border: '1px solid #c3e6cb', padding: '12px 20px',
+          marginBottom: '20px', fontSize: '0.82rem', color: '#2d6a4f', fontFamily: 'sans-serif' }}>
+          {successMsg}
+        </div>
+      )}
+
+      {showForm && (
+        <div style={{ background: '#fff', padding: isMobile ? '24px' : '32px',
+          border: '1px solid #e8e3db', boxShadow: '0 2px 24px rgba(0,0,0,0.08)', marginBottom: '32px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <h3 style={{ fontFamily: "'Georgia', serif", fontWeight: '300', fontSize: '1.2rem', color: '#1a1a1a', margin: 0 }}>
+              {editingId ? '✎ Edit Service' : '+ New Service'}
+            </h3>
+            <button onClick={() => { setShowForm(false); setEditingId(null); }}
+              style={{ background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer', color: '#bbb' }}>✕</button>
+          </div>
+          <form onSubmit={handleSubmit}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '32px' }}>
+              <div>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={labelStyle}>Service Title *</label>
+                  <input value={form.title} onChange={e => handleField('title', e.target.value)}
+                    placeholder="e.g. Interior Design" style={inputStyle} required />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                  <div>
+                    <label style={labelStyle}>Subtitle</label>
+                    <input value={form.subtitle} onChange={e => handleField('subtitle', e.target.value)}
+                      placeholder="e.g. Made to Measure" style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Tag / Badge</label>
+                    <input value={form.tag} onChange={e => handleField('tag', e.target.value)}
+                      placeholder="e.g. Interiors" style={inputStyle} />
+                  </div>
+                </div>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={labelStyle}>Description</label>
+                  <textarea value={form.desc} onChange={e => handleField('desc', e.target.value)}
+                    placeholder="Brief description of this service..." rows={3}
+                    style={{ ...inputStyle, resize: 'vertical', minHeight: '80px', lineHeight: '1.7' }} />
+                </div>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={labelStyle}>Bullet Points (up to 5)</label>
+                  {form.points.map((pt, i) => (
+                    <input key={i} value={pt} onChange={e => handlePoint(i, e.target.value)}
+                      placeholder={`Point ${i + 1}`}
+                      style={{ ...inputStyle, marginBottom: '6px' }} />
+                  ))}
+                </div>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={labelStyle}>Image</label>
+                  <div style={{ display: 'flex', gap: '2px', marginBottom: '10px' }}>
+                    {[{ key: 'upload', label: '📁 Upload' }, { key: 'url', label: '🔗 URL' }].map(m => (
+                      <button key={m.key} type="button" onClick={() => setUploadMode(m.key)} style={{
+                        flex: 1, padding: '8px',
+                        background: uploadMode === m.key ? '#1a1a1a' : '#f5f0ea',
+                        color: uploadMode === m.key ? '#fff' : '#888',
+                        border: 'none', cursor: 'pointer', fontSize: '0.65rem',
+                        letterSpacing: '1.5px', textTransform: 'uppercase', fontFamily: 'sans-serif',
+                      }}>{m.label}</button>
+                    ))}
+                  </div>
+                  {uploadMode === 'upload' && (
+                    <div>
+                      <input ref={fileRef} type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
+                      <div onClick={() => !uploading && fileRef.current.click()}
+                        style={{ border: '2px dashed #e8e3db', padding: '24px', textAlign: 'center',
+                          cursor: uploading ? 'wait' : 'pointer', background: '#fdfcfb' }}>
+                        {uploading
+                          ? <p style={{ fontFamily: 'sans-serif', fontSize: '0.78rem', color: '#c9a96e', margin: 0 }}>Uploading...</p>
+                          : <p style={{ fontFamily: 'sans-serif', fontSize: '0.78rem', color: '#888', margin: 0 }}>📁 Click to select image</p>}
+                      </div>
+                      {previewImg && previewImg.startsWith('http') && (
+                        <p style={{ fontFamily: 'sans-serif', fontSize: '0.7rem', color: '#2ecc71', marginTop: '6px' }}>✓ Uploaded!</p>
+                      )}
+                    </div>
+                  )}
+                  {uploadMode === 'url' && (
+                    <input value={form.img} onChange={e => handleField('img', e.target.value)}
+                      placeholder="https://..." style={inputStyle} />
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button type="submit" disabled={uploading} style={{
+                    flex: 1, padding: '12px', background: '#1a1a1a', color: '#fff',
+                    border: 'none', cursor: 'pointer', fontSize: '0.65rem',
+                    letterSpacing: '3px', textTransform: 'uppercase', fontFamily: 'sans-serif',
+                  }}>{uploading ? 'Uploading...' : editingId ? '✓ Update Service' : '✓ Add Service'}</button>
+                  <button type="button" onClick={() => { setShowForm(false); setEditingId(null); }}
+                    style={{ padding: '12px 16px', background: 'transparent', border: '1px solid #e8e3db',
+                      color: '#888', cursor: 'pointer', fontSize: '0.6rem', fontFamily: 'sans-serif' }}>Cancel</button>
+                </div>
+              </div>
+              <div>
+                <p style={{ fontFamily: 'sans-serif', fontSize: '0.58rem', letterSpacing: '3px',
+                  textTransform: 'uppercase', color: '#bbb', marginBottom: '12px' }}>Preview</p>
+                <div style={{ position: 'relative', height: '220px', overflow: 'hidden', background: '#f0ebe3' }}>
+                  {previewImg
+                    ? <img src={previewImg} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <p style={{ color: '#ccc', fontFamily: 'sans-serif', fontSize: '0.75rem' }}>Image preview</p>
+                      </div>}
+                  {form.tag && <span style={{ position: 'absolute', top: '12px', left: '12px',
+                    background: 'rgba(255,255,255,0.92)', padding: '3px 9px',
+                    fontSize: '0.52rem', letterSpacing: '2px', textTransform: 'uppercase',
+                    color: '#888', fontFamily: 'sans-serif' }}>{form.tag}</span>}
+                </div>
+                <div style={{ background: '#fff', padding: '20px', border: '1px solid #e8e3db' }}>
+                  {form.subtitle && <p style={{ fontSize: '0.55rem', letterSpacing: '3px',
+                    textTransform: 'uppercase', color: '#c9a96e', margin: '0 0 6px', fontFamily: 'sans-serif' }}>{form.subtitle}</p>}
+                  <h3 style={{ fontFamily: "'Georgia', serif", fontSize: '1.2rem', fontWeight: '300',
+                    color: '#1a1a1a', margin: '0 0 8px' }}>{form.title || 'Service Title'}</h3>
+                  {form.desc && <p style={{ fontFamily: 'sans-serif', fontSize: '0.75rem', color: '#888',
+                    lineHeight: '1.7', margin: '0 0 10px' }}>{form.desc}</p>}
+                  {form.points.filter(p => p).slice(0, 3).map((pt, i) => (
+                    <div key={i} style={{ display: 'flex', gap: '8px', padding: '3px 0',
+                      fontFamily: 'sans-serif', fontSize: '0.72rem', color: '#666' }}>
+                      <span style={{ color: '#c9a96e' }}>◆</span>{pt}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          <h3 style={{ fontFamily: "'Georgia', serif", fontSize: '1.1rem', fontWeight: '300',
+            color: '#1a1a1a', margin: '0 0 4px' }}>
+            Services Manager
+            <span style={{ fontFamily: 'sans-serif', fontSize: '0.7rem', color: '#bbb', marginLeft: '10px' }}>({services.length} services)</span>
+          </h3>
+          <p style={{ fontFamily: 'sans-serif', fontSize: '0.72rem', color: '#aaa', margin: 0 }}>Services page par cards ke roop mein dikhenge</p>
+        </div>
+        {!showForm && (
+          <button onClick={openAdd} style={{ padding: '10px 22px', background: '#c9a96e',
+            color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.65rem',
+            letterSpacing: '2px', textTransform: 'uppercase', fontFamily: 'sans-serif' }}
+            onMouseEnter={e => e.currentTarget.style.background = '#1a1a1a'}
+            onMouseLeave={e => e.currentTarget.style.background = '#c9a96e'}>
+            + Add New Service
+          </button>
+        )}
+      </div>
+
+      <div style={{ display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+        {services.map((s, idx) => (
+          <div key={s.id} style={{ background: '#fff', overflow: 'hidden',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ height: '180px', overflow: 'hidden', position: 'relative', background: '#f0ebe3' }}>
+              {s.img
+                ? <img src={s.img} alt={s.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', flexDirection: 'column', gap: '8px' }}>
+                    <p style={{ fontSize: '2rem', margin: 0 }}>🏗️</p>
+                    <p style={{ fontFamily: 'sans-serif', fontSize: '0.65rem', color: '#bbb', margin: 0 }}>No image</p>
+                  </div>}
+              {s.tag && <span style={{ position: 'absolute', top: '10px', left: '10px',
+                background: 'rgba(201,169,110,0.92)', color: '#fff', fontSize: '0.52rem',
+                padding: '3px 9px', letterSpacing: '1.5px', textTransform: 'uppercase', fontFamily: 'sans-serif' }}>{s.tag}</span>}
+              {s.isDefault && <span style={{ position: 'absolute', top: '10px', right: '10px',
+                background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: '0.5rem',
+                padding: '3px 7px', fontFamily: 'sans-serif' }}>Default</span>}
+            </div>
+            <div style={{ padding: '16px', flex: 1 }}>
+              <h4 style={{ fontFamily: "'Georgia', serif", fontWeight: '300',
+                fontSize: '1rem', color: '#1a1a1a', margin: '0 0 4px' }}>{s.title}</h4>
+              {s.subtitle && <p style={{ fontFamily: 'sans-serif', fontSize: '0.62rem', color: '#c9a96e',
+                letterSpacing: '2px', textTransform: 'uppercase', margin: '0 0 8px' }}>{s.subtitle}</p>}
+              {s.desc && <p style={{ fontFamily: 'sans-serif', fontSize: '0.73rem', color: '#999',
+                lineHeight: '1.6', margin: '0 0 12px', display: '-webkit-box',
+                WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.desc}</p>}
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button onClick={() => openEdit(s)} style={{ flex: 1, padding: '8px', background: 'none',
+                  border: '1px solid #1a1a1a', cursor: 'pointer', fontSize: '0.6rem',
+                  letterSpacing: '2px', textTransform: 'uppercase', fontFamily: 'sans-serif', color: '#1a1a1a' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.color = '#fff'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#1a1a1a'; }}>✎ Edit</button>
+                {!s.isDefault && (
+                  <button onClick={() => handleDelete(s.id)} style={{ flex: 1, padding: '8px', background: 'none',
+                    border: '1px solid #e74c3c', cursor: 'pointer', fontSize: '0.6rem',
+                    letterSpacing: '2px', textTransform: 'uppercase', fontFamily: 'sans-serif', color: '#e74c3c' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = '#e74c3c'; e.currentTarget.style.color = '#fff'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#e74c3c'; }}>✕ Delete</button>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────
+// CONTENT MANAGER (Text & Non-Image Content)
+// ─────────────────────────────────────────────
+const ContentManager = () => {
+  const { content, updateContent, resetToDefault, overrideCount, DEFAULT_CONTENT } = useContent();
+  const [editingKey, setEditingKey] = useState(null);
+  const [editingValue, setEditingValue] = useState('');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [savedKey, setSavedKey] = useState(null);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const contentKeys = Object.keys(DEFAULT_CONTENT).filter(k =>
+    searchQuery === '' || k.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (content[k] || DEFAULT_CONTENT[k]).toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleEdit = (key) => {
+    setEditingKey(key);
+    setEditingValue(content[key] || DEFAULT_CONTENT[key] || '');
+  };
+
+  const handleSave = () => {
+    if (!editingKey || editingValue === '') return;
+    updateContent(editingKey, editingValue);
+    setSavedKey(editingKey);
+    setTimeout(() => setSavedKey(null), 2500);
+    setEditingKey(null);
+  };
+
+  const isModified = (key) => (content[key] || DEFAULT_CONTENT[key]) !== DEFAULT_CONTENT[key];
+
+  return (
+    <div style={{
+      display: 'flex', minHeight: '600px', background: '#faf8f5',
+      flexDirection: isMobile ? 'column' : 'row',
+    }}>
+      {/* ── SIDEBAR ── */}
+      <div style={{
+        width: isMobile ? '100%' : '260px',
+        flexShrink: 0, background: '#1a1a1a',
+        overflowY: isMobile ? 'visible' : 'auto',
+        padding: '20px',
+      }}>
+        <div style={{ marginBottom: '20px' }}>
+          <p style={{ fontFamily: 'sans-serif', fontSize: '0.55rem',
+            letterSpacing: '3px', textTransform: 'uppercase',
+            color: 'rgba(255,255,255,0.4)', margin: '0 0 8px' }}>
+            Content Modified
+          </p>
+          <p style={{ fontFamily: "'Georgia', serif", fontSize: '1.6rem',
+            color: '#c9a96e', margin: 0, lineHeight: 1 }}>
+            {overrideCount}
+            <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)',
+              fontFamily: 'sans-serif', marginLeft: '6px' }}>items</span>
+          </p>
+        </div>
+
+        <input
+          placeholder="🔍 Search content..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          style={{
+            width: '100%', padding: '10px', border: '1px solid #444',
+            outline: 'none', fontSize: '0.75rem', fontFamily: 'sans-serif',
+            background: '#2a2a2a', color: '#fff', marginBottom: '16px', boxSizing: 'border-box',
+          }}
+        />
+
+        <button onClick={() => {
+          if (window.confirm('Reset ALL content to defaults?')) {
+            // Note: Need to add resetAll to ContentContext
+            window.location.reload();
+          }
+        }} style={{
+          width: '100%', padding: '10px',
+          background: 'rgba(231,76,60,0.12)',
+          border: '1px solid rgba(231,76,60,0.3)',
+          color: '#e74c3c', cursor: 'pointer',
+          fontSize: '0.6rem', letterSpacing: '2px',
+          textTransform: 'uppercase', fontFamily: 'sans-serif',
+        }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(231,76,60,0.25)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(231,76,60,0.12)'}>
+          ↺ Reset All
+        </button>
+      </div>
+
+      {/* ── MAIN PANEL ── */}
+      <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+        <h3 style={{ fontFamily: "'Georgia', serif", fontSize: '1.2rem',
+          fontWeight: '300', color: '#1a1a1a', margin: '0 0 20px' }}>
+          Site Text & Content Manager
+          <span style={{ fontFamily: 'sans-serif', fontSize: '0.7rem',
+            color: '#bbb', marginLeft: '12px' }}>
+            ({contentKeys.length} items)
+          </span>
+        </h3>
+
+        {editingKey ? (
+          <div style={{
+            background: '#fff', padding: '24px',
+            border: '1px solid #e8e3db', marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h4 style={{ fontFamily: 'sans-serif', fontSize: '0.9rem', color: '#1a1a1a', margin: 0 }}>
+                Editing: <code style={{ color: '#c9a96e' }}>{editingKey}</code>
+              </h4>
+              <button onClick={() => { 
+                resetToDefault(editingKey);
+                setEditingKey(null);
+              }} style={{
+                padding: '6px 12px', background: 'transparent',
+                border: '1px solid #e8e3db', color: '#e74c3c',
+                cursor: 'pointer', fontSize: '0.6rem', letterSpacing: '1px',
+                textTransform: 'uppercase', fontFamily: 'sans-serif',
+              }}>
+                ↺ Reset to Default
+              </button>
+            </div>
+            <textarea
+              value={editingValue}
+              onChange={e => setEditingValue(e.target.value)}
+              style={{
+                width: '100%', minHeight: '120px', padding: '12px',
+                border: '1px solid #ddd', fontFamily: 'monospace',
+                fontSize: '0.85rem', marginBottom: '16px', boxSizing: 'border-box',
+              }}
+            />
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={handleSave} style={{
+                flex: 1, padding: '12px', background: '#c9a96e', color: '#fff',
+                border: 'none', cursor: 'pointer', fontSize: '0.65rem',
+                letterSpacing: '2px', textTransform: 'uppercase', fontFamily: 'sans-serif',
+              }}>
+                ✓ Save
+              </button>
+              <button onClick={() => setEditingKey(null)} style={{
+                padding: '12px 16px', background: 'transparent',
+                border: '1px solid #e8e3db', color: '#888',
+                cursor: 'pointer', fontSize: '0.6rem', letterSpacing: '1px',
+                textTransform: 'uppercase', fontFamily: 'sans-serif',
+              }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+          {contentKeys.map(key => (
+            <div key={key} style={{
+              background: '#fff', padding: '16px',
+              border: isModified(key) ? '2px solid #c9a96e' : '1px solid #e8e3db',
+              boxShadow: savedKey === key ? '0 0 0 2px #2ecc71' : 'none',
+              transition: 'box-shadow 0.3s',
+            }}>
+              <p style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: '#999', margin: '0 0 8px' }}>
+                {key}
+              </p>
+              <p style={{ fontFamily: 'sans-serif', fontSize: '0.85rem', color: '#1a1a1a',
+                margin: '0 0 12px', lineHeight: '1.5', maxHeight: '80px', overflow: 'hidden' }}>
+                {content[key] || DEFAULT_CONTENT[key] || '—'}
+              </p>
+              <button onClick={() => handleEdit(key)} style={{
+                width: '100%', padding: '8px', background: '#f0ebe3', color: '#1a1a1a',
+                border: 'none', cursor: 'pointer', fontSize: '0.65rem',
+                letterSpacing: '1px', textTransform: 'uppercase', fontFamily: 'sans-serif',
+              }}>
+                Edit
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────
 // MAIN ADMIN PANEL
 // ─────────────────────────────────────────────
 const AdminPanel = () => {
@@ -896,9 +1805,12 @@ const AdminPanel = () => {
   const handleLogout = () => { logout(); navigate('/'); };
 
   const TABS = [
-    { key: 'add',    label: editingId ? '✎ Edit Product' : '+ Add Product' },
-    { key: 'manage', label: `📦 Manage (${products.length})`                },
-    { key: 'images', label: '🖼️ Image Manager'                              },
+    { key: 'add',      label: editingId ? '✎ Edit Product' : '+ Add Product' },
+    { key: 'manage',   label: `📦 Manage (${products.length})`                },
+    { key: 'projects', label: '🏗️ Projects'                                   },
+    { key: 'services', label: '🛠️ Services'                                   },
+    { key: 'images',   label: '🖼️ Image Manager'                              },
+    { key: 'content',  label: '📝 Text & Content'                             },
   ];
 
   return (
@@ -1281,8 +2193,16 @@ const AdminPanel = () => {
           </div>
         )}
 
-        {/* ─── TAB 3 — IMAGE MANAGER ─── */}
+        {/* ─── TAB 3 — PROJECTS ─── */}
+        {activeTab === 'projects' && <ProjectManager />}
+
+        {/* ─── TAB 4 — SERVICES ─── */}
+        {activeTab === 'services' && <ServiceManager />}
+
+        {/* ─── TAB 5 — IMAGE MANAGER ─── */}
         {activeTab === 'images' && <ImageManager />}
+
+        {activeTab === 'content' && <ContentManager />}
 
       </div>
     </div>
