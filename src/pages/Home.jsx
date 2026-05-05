@@ -72,8 +72,13 @@ const Home = () => {
             color: '#fff', fontFamily: "'Georgia', serif",
             fontSize: isMobile ? '2rem' : 'clamp(2rem, 5vw, 4.5rem)',
             fontWeight: '300', letterSpacing: isMobile ? '4px' : '8px',
+            textTransform: 'uppercase', margin: '0 0 10px',
+          }}>{content['home.hero.title']}</h1>
+          <p style={{
+            color: 'rgba(255,255,255,0.7)', fontFamily: 'sans-serif',
+            fontSize: '0.75rem', letterSpacing: '4px',
             textTransform: 'uppercase', margin: '0 0 20px',
-          }}>TrueBuild Projects</h1>
+          }}>{content['home.hero.subtitle']}</p>
           <div style={{ width: '55px', height: '1px', background: '#c9a96e' }} />
         </div>
       </section>
@@ -100,21 +105,21 @@ const Home = () => {
             fontSize: '0.62rem', letterSpacing: '5px',
             textTransform: 'uppercase', color: '#c9a96e',
             marginBottom: '18px', fontFamily: 'sans-serif',
-          }}>Our Story</p>
+          }}>{content['home.story.label']}</p>
           <h2 style={{
             fontFamily: "'Georgia', serif",
             fontSize: isMobile ? '1.3rem' : 'clamp(1.2rem, 2.5vw, 1.8rem)',
             fontWeight: '300', color: '#1a1a1a',
             lineHeight: '1.6', marginBottom: '22px',
           }}>
-            {content['home.story.title'] || 'It began at home, like it does with all great things.'}
+            {content['home.story.title']}
           </h2>
           <p style={{
             fontSize: '0.86rem', color: '#888',
             lineHeight: '2.2', margin: 0, fontFamily: 'sans-serif',
             whiteSpace: 'pre-wrap',
           }}>
-            {content['home.story.text'] || STUDIO_STORY}
+            {content['home.story.text']}
           </p>
           <KnowMoreBtn to="/about" label="Know More" />
         </div>
@@ -134,12 +139,12 @@ const Home = () => {
           textAlign: 'center', fontSize: '0.62rem',
           letterSpacing: '5px', textTransform: 'uppercase',
           color: '#c9a96e', marginBottom: '12px', fontFamily: 'sans-serif',
-        }}>What We Do</p>
+        }}>{content['home.services.label']}</p>
         <h2 style={{
           textAlign: 'center', fontFamily: "'Georgia', serif",
           fontWeight: '300', fontSize: isMobile ? '1.4rem' : '2rem',
           color: '#1a1a1a', letterSpacing: '3px', marginBottom: '48px',
-        }}>Our Expertise</h2>
+        }}>{content['home.services.title']}</h2>
         <div style={{
           display: 'flex', gap: '3px',
           flexDirection: isMobile ? 'column' : 'row',
@@ -169,12 +174,13 @@ const Home = () => {
           textTransform: 'uppercase', color: '#c9a96e',
           marginBottom: '12px', fontFamily: 'sans-serif',
           textAlign: 'center',
-        }}>Portfolio</p>
+        }}>{content['home.projects.label']}</p>
         <h2 style={{
           textAlign: 'center', fontFamily: "'Georgia', serif",
           fontWeight: '300', fontSize: isMobile ? '1.4rem' : '2rem',
           color: '#1a1a1a', letterSpacing: '3px', marginBottom: '48px',
-        }}>Our Work</h2>
+        }}>{content['home.projects.title']}</h2>
+
 
         <div style={{
           display: 'grid',

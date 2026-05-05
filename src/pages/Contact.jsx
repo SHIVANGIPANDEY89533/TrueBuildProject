@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import emailjs from '@emailjs/browser';
 import { useSiteImages } from '../context/SiteImagesContext';
+import { useContent } from '../context/ContentContext';
 
 
 // ── EMAILJS CONFIG
@@ -9,35 +10,6 @@ const EMAILJS_SERVICE_ID  = 'service_w5hfs3l';
 const EMAILJS_TEMPLATE_ID = 'template_is1fhjo';
 const EMAILJS_PUBLIC_KEY  = 'BTPoxY7CRPMliPHZj';
 const ADMIN_EMAIL         = 'truebuildproject@gmail.com';
-
-
-// ── Contact categories
-const CONTACT_TYPES = [
-  {
-    icon:  '◈',
-    title: 'Interiors Project Enquiries',
-    desc:  'For residential, commercial, hospitality and architectural design projects.',
-    email: 'truebuildproject@gmail.com',
-    phone: '+91 7217310020',
-    color: '#c9a96e',
-  },
-  {
-    icon:  '◉',
-    title: 'Construction Enquiries',
-    desc:  'For new building projects, structural work, excavation, masonry and complete construction consultations.',
-    email: 'truebuildproject@gmail.com',
-    phone: '+91 72173 10020',
-    color: '#1a1a1a',
-  },
-  {
-    icon:  '◇',
-    title: 'Other Enquiries & Customer Care',
-    desc:  'For shop orders, bespoke furniture, general questions and after-sale support.',
-    email: 'truebuildproject@gmail.com',
-    phone: '+91 70551 85315',
-    color: '#888',
-  },
-];
 
 
 const ENQUIRY_TYPES = [
@@ -61,6 +33,7 @@ const fieldStyle = {
 const Contact = () => {
   const [isMobile,  setIsMobile]  = useState(window.innerWidth < 768);
   const { images } = useSiteImages();
+  const { content } = useContent();
   const [form,      setForm]      = useState({
     name: '', email: '', phone: '',
     enquiryType: 'Interiors Project', message: '',
@@ -69,6 +42,34 @@ const Contact = () => {
   const [sending,   setSending]   = useState(false);
   const [focused,   setFocused]   = useState(null);
   const [activeTab, setActiveTab] = useState(0);
+
+  // ── Contact categories (Dynamic)
+  const CONTACT_TYPES = [
+    {
+      icon:  '◈',
+      title: content['contact.type1.title'],
+      desc:  content['contact.type1.desc'],
+      email: content['contact.type1.email'],
+      phone: content['contact.type1.phone'],
+      color: '#c9a96e',
+    },
+    {
+      icon:  '◉',
+      title: content['contact.type2.title'],
+      desc:  content['contact.type2.desc'],
+      email: content['contact.type2.email'],
+      phone: content['contact.type2.phone'],
+      color: '#1a1a1a',
+    },
+    {
+      icon:  '◇',
+      title: content['contact.type3.title'],
+      desc:  content['contact.type3.desc'],
+      email: content['contact.type3.email'],
+      phone: content['contact.type3.phone'],
+      color: '#888',
+    },
+  ];
 
 
   useEffect(() => {
@@ -140,19 +141,19 @@ const Contact = () => {
         }}>
           <p style={{ fontSize: '0.6rem', letterSpacing: '5px', textTransform: 'uppercase',
             color: 'rgba(255,255,255,0.6)', fontFamily: 'sans-serif', marginBottom: '14px' }}>
-            Get in Touch
+            {content['contact.hero.label']}
           </p>
           <h1 style={{ fontFamily: "'Georgia', serif", color: '#fff',
             fontSize: isMobile ? '2rem' : 'clamp(2.5rem, 5vw, 4rem)',
             fontWeight: '300', letterSpacing: '6px',
             textTransform: 'uppercase', margin: '0 0 16px' }}>
-            Contact Us
+            {content['contact.hero.title']}
           </h1>
           <div style={{ width: '40px', height: '1px', background: '#c9a96e', margin: '0 auto 18px' }} />
           <p style={{ color: 'rgba(255,255,255,0.75)', fontFamily: "'Georgia', serif",
             fontSize: isMobile ? '0.88rem' : '1rem', fontWeight: '300',
             maxWidth: '480px', lineHeight: '1.9' }}>
-            If you need help before, during or after your purchase — this is the place to be.
+            {content['contact.hero.text']}
           </p>
         </div>
       </div>
@@ -176,7 +177,7 @@ const Contact = () => {
               letterSpacing: '2px', textTransform: 'uppercase',
               transition: 'all 0.3s',
             }}>
-              {isMobile ? ct.title.split(' ')[0] : ct.title}
+              {isMobile ? ct.title?.split(' ')[0] : ct.title}
             </button>
           ))}
         </div>
@@ -217,7 +218,7 @@ const Contact = () => {
                 </div>
               </div>
             </a>
-            <a href={`tel:${CONTACT_TYPES[activeTab].phone.replace(/\s/g, '')}`} style={{ textDecoration: 'none' }}>
+            <a href={`tel:${CONTACT_TYPES[activeTab].phone?.replace(/\s/g, '')}`} style={{ textDecoration: 'none' }}>
               <div style={{
                 display: 'flex', gap: '12px', alignItems: 'center',
                 background: 'rgba(255,255,255,0.05)',
@@ -241,6 +242,7 @@ const Contact = () => {
         </div>
       </section>
 
+
       {/* ── FORM + STUDIO INFO ── */}
       <section style={{
         padding: isMobile ? '52px 24px 60px' : '80px 80px',
@@ -257,12 +259,12 @@ const Contact = () => {
             <>
               <p style={{ fontSize: '0.6rem', letterSpacing: '5px', textTransform: 'uppercase',
                 color: '#c9a96e', marginBottom: '12px', fontFamily: 'sans-serif' }}>
-                Send a Message
+                {content['contact.form.label']}
               </p>
               <h2 style={{ fontFamily: "'Georgia', serif",
                 fontSize: isMobile ? '1.7rem' : '2.2rem',
                 fontWeight: '300', color: '#1a1a1a', margin: '0 0 10px' }}>
-                We'd love to hear from you
+                {content['contact.form.title']}
               </h2>
               <div style={{ width: '36px', height: '1px', background: '#c9a96e', marginBottom: '32px' }} />
 
@@ -367,7 +369,7 @@ const Contact = () => {
                 }}
                   onMouseEnter={e => { if (!sending) e.target.style.background = '#c9a96e'; }}
                   onMouseLeave={e => { if (!sending) e.target.style.background = '#1a1a1a'; }}>
-                  {sending ? '⏳ Sending...' : 'Send Message →'}
+                  {sending ? '⏳ Sending...' : content['contact.form.button']}
                 </button>
 
                 <p style={{ fontFamily: 'sans-serif', fontSize: '0.68rem',
@@ -431,7 +433,7 @@ const Contact = () => {
             boxShadow: '0 2px 20px rgba(0,0,0,0.06)', marginBottom: '20px' }}>
             <p style={{ fontSize: '0.55rem', letterSpacing: '3px', textTransform: 'uppercase',
               color: '#c9a96e', marginBottom: '6px', fontFamily: 'sans-serif' }}>
-              Address 1
+              {content['contact.address1.label']}
             </p>
             <p style={{ fontSize: '0.58rem', letterSpacing: '4px', textTransform: 'uppercase',
               color: '#999', marginBottom: '14px', fontFamily: 'sans-serif' }}>
@@ -439,33 +441,31 @@ const Contact = () => {
             </p>
             <h3 style={{ fontFamily: "'Georgia', serif", fontSize: '1.1rem',
               fontWeight: '300', color: '#1a1a1a', margin: '0 0 10px' }}>
-              Ghaziabad 
+              {content['contact.address1.city']}
             </h3>
             <p style={{ fontFamily: 'sans-serif', fontSize: '0.8rem', color: '#666',
               lineHeight: '1.9', margin: '0 0 16px' }}>
-              KH-576M, Durga Enclave,<br />
-              GB Nagar, Ghaziabad,<br />
-              Uttar Pradesh — 201009
+              {content['contact.address1.text']}
             </p>
             <div style={{ marginBottom: '16px', paddingBottom: '16px',
               borderBottom: '1px solid #f5f0ea' }}>
               <p style={{ fontFamily: 'sans-serif', fontSize: '0.55rem',
                 letterSpacing: '2px', textTransform: 'uppercase',
                 color: '#bbb', margin: '0 0 8px' }}>Contact Numbers</p>
-              <a href="tel:+917055185315" style={{ textDecoration: 'none', display: 'block', marginBottom: '5px' }}>
+              <a href={`tel:${content['contact.address1.phone1']?.replace(/\s/g, '')}`} style={{ textDecoration: 'none', display: 'block', marginBottom: '5px' }}>
                 <p style={{ fontFamily: 'sans-serif', fontSize: '0.8rem', color: '#333',
                   margin: 0, transition: 'color 0.2s' }}
                   onMouseEnter={e => e.target.style.color = '#c9a96e'}
                   onMouseLeave={e => e.target.style.color = '#333'}>
-                  📞 +91 70551 85315
+                  📞 {content['contact.address1.phone1']}
                 </p>
               </a>
-              <a href="tel:+917217310020" style={{ textDecoration: 'none', display: 'block' }}>
+              <a href={`tel:${content['contact.address1.phone2']?.replace(/\s/g, '')}`} style={{ textDecoration: 'none', display: 'block' }}>
                 <p style={{ fontFamily: 'sans-serif', fontSize: '0.8rem', color: '#333',
                   margin: 0, transition: 'color 0.2s' }}
                   onMouseEnter={e => e.target.style.color = '#c9a96e'}
                   onMouseLeave={e => e.target.style.color = '#333'}>
-                  📞 +91 72173 10020
+                  📞 {content['contact.address1.phone2']}
                 </p>
               </a>
             </div>
@@ -489,7 +489,7 @@ const Contact = () => {
             boxShadow: '0 2px 20px rgba(0,0,0,0.06)', marginBottom: '20px' }}>
             <p style={{ fontSize: '0.55rem', letterSpacing: '3px', textTransform: 'uppercase',
               color: '#c9a96e', marginBottom: '6px', fontFamily: 'sans-serif' }}>
-              Address 2
+              {content['contact.address2.label']}
             </p>
             <p style={{ fontSize: '0.58rem', letterSpacing: '4px', textTransform: 'uppercase',
               color: '#999', marginBottom: '14px', fontFamily: 'sans-serif' }}>
@@ -497,33 +497,31 @@ const Contact = () => {
             </p>
             <h3 style={{ fontFamily: "'Georgia', serif", fontSize: '1.1rem',
               fontWeight: '300', color: '#1a1a1a', margin: '0 0 10px' }}>
-              Amroha
+              {content['contact.address2.city']}
             </h3>
             <p style={{ fontFamily: 'sans-serif', fontSize: '0.8rem', color: '#666',
               lineHeight: '1.9', margin: '0 0 16px' }}>
-              Village Agraula Kalan,<br />
-              Near Chhoti Masjid, Hasanpur,<br />
-              Amroha, Uttar Pradesh — 244241
+              {content['contact.address2.text']}
             </p>
             <div style={{ marginBottom: '16px', paddingBottom: '16px',
               borderBottom: '1px solid #f5f0ea' }}>
               <p style={{ fontFamily: 'sans-serif', fontSize: '0.55rem',
                 letterSpacing: '2px', textTransform: 'uppercase',
                 color: '#bbb', margin: '0 0 8px' }}>Contact Numbers</p>
-              <a href="tel:+917055185315" style={{ textDecoration: 'none', display: 'block', marginBottom: '5px' }}>
+              <a href={`tel:${content['contact.address2.phone1']?.replace(/\s/g, '')}`} style={{ textDecoration: 'none', display: 'block', marginBottom: '5px' }}>
                 <p style={{ fontFamily: 'sans-serif', fontSize: '0.8rem', color: '#333',
                   margin: 0, transition: 'color 0.2s' }}
                   onMouseEnter={e => e.target.style.color = '#c9a96e'}
                   onMouseLeave={e => e.target.style.color = '#333'}>
-                  📞 +91 70551 85315
+                  📞 {content['contact.address2.phone1']}
                 </p>
               </a>
-              <a href="tel:+917217310020" style={{ textDecoration: 'none', display: 'block' }}>
+              <a href={`tel:${content['contact.address2.phone2']?.replace(/\s/g, '')}`} style={{ textDecoration: 'none', display: 'block' }}>
                 <p style={{ fontFamily: 'sans-serif', fontSize: '0.8rem', color: '#333',
                   margin: 0, transition: 'color 0.2s' }}
                   onMouseEnter={e => e.target.style.color = '#c9a96e'}
                   onMouseLeave={e => e.target.style.color = '#333'}>
-                  📞 +91 72173 10020
+                  📞 {content['contact.address2.phone2']}
                 </p>
               </a>
             </div>
@@ -550,9 +548,9 @@ const Contact = () => {
               Quick Contact
             </p>
             {[
-              { icon: '✉', label: 'Email', value: 'truebuildproject@gmail.com', href: 'mailto:truebuildproject@gmail.com' },
-              { icon: '☎', label: 'Call',  value: '+91 70551 85315',            href: 'tel:+917055185315' },
-              { icon: '☎', label: 'Call',  value: '+91 72173 10020',            href: 'tel:+917217310020' },
+              { icon: '✉', label: 'Email', value: content['social.email'], href: `mailto:${content['social.email']}` },
+              { icon: '☎', label: 'Call',  value: content['social.phone1'], href: `tel:${content['social.phone1']?.replace(/\s/g, '')}` },
+              { icon: '☎', label: 'Call',  value: content['social.phone2'], href: `tel:${content['social.phone2']?.replace(/\s/g, '')}` },
             ].map((item, i) => (
               <a key={i} href={item.href} style={{ textDecoration: 'none', display: 'block' }}>
                 <div style={{
@@ -591,9 +589,9 @@ const Contact = () => {
   </p>
   <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
     {[
-      { label: 'Instagram', href: 'https://www.instagram.com/truebuild_project?utm_source=qr&igsh=ZmpjM2hteXl5NGxt' },
-      { label: 'Facebook',  href: 'https://www.facebook.com/people/TrueBuild-Projects/61583582405966/' },
-      { label: 'LinkedIn',  href: 'https://www.linkedin.com/company/truebuild-projects/' },
+      { label: 'Instagram', href: content['social.instagram'] },
+      { label: 'Facebook',  href: content['social.facebook'] },
+      { label: 'LinkedIn',  href: content['social.linkedin'] },
     ].map((s, i) => (
       <a key={i} href={s.href} target="_blank" rel="noopener noreferrer"
         style={{ textDecoration: 'none' }}>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSiteImages } from '../context/SiteImagesContext';
 import { useServices } from '../context/ServicesContext';
+import { useContent } from '../context/ContentContext';
 
 const Services = () => {
   const [isMobile,   setIsMobile]   = useState(window.innerWidth < 768);
@@ -9,6 +10,7 @@ const Services = () => {
   const [expanded,   setExpanded]   = useState(null);
   const { images } = useSiteImages();
   const { services, loading } = useServices();
+  const { content } = useContent();
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -48,7 +50,7 @@ const Services = () => {
         }}>
           <p style={{ fontSize: '0.6rem', letterSpacing: '5px', textTransform: 'uppercase',
             color: 'rgba(255,255,255,0.6)', fontFamily: 'sans-serif', marginBottom: '16px' }}>
-            One Team · One Vision · Zero Stress
+            {content['services.hero.label']}
           </p>
           <h1 style={{
             fontFamily: "'Georgia', serif", color: '#fff',
@@ -56,7 +58,7 @@ const Services = () => {
             fontWeight: '300', letterSpacing: '6px',
             textTransform: 'uppercase', margin: '0 0 16px',
           }}>
-            Our Services
+            {content['services.hero.title']}
           </h1>
           <div style={{ width: '40px', height: '1px', background: '#c9a96e', margin: '0 auto 20px' }} />
           <p style={{
@@ -64,7 +66,7 @@ const Services = () => {
             fontSize: isMobile ? '0.85rem' : '1rem',
             fontWeight: '300', lineHeight: '1.8', maxWidth: '560px',
           }}>
-            From the first shovel in the ground to the final coat of paint — quality, integrity, and precision.
+            {content['services.hero.text']}
           </p>
         </div>
       </div>
@@ -95,12 +97,12 @@ const Services = () => {
         <div style={{ textAlign: 'center', marginBottom: isMobile ? '36px' : '56px' }}>
           <p style={{ fontSize: '0.6rem', letterSpacing: '5px', textTransform: 'uppercase',
             color: '#c9a96e', marginBottom: '12px', fontFamily: 'sans-serif' }}>
-            What We Offer
+            {content['services.offer.label']}
           </p>
           <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: '300',
             fontSize: isMobile ? '1.8rem' : '2.4rem', color: '#1a1a1a',
             margin: '0 0 16px', letterSpacing: '3px', textTransform: 'uppercase' }}>
-            End-to-End Project Delivery
+            {content['services.offer.title']}
           </h2>
           <div style={{ width: '40px', height: '1px', background: '#c9a96e', margin: '0 auto' }} />
         </div>
@@ -240,25 +242,24 @@ const Services = () => {
           <div>
             <p style={{ fontSize: '0.6rem', letterSpacing: '5px', textTransform: 'uppercase',
               color: '#c9a96e', marginBottom: '16px', fontFamily: 'sans-serif' }}>
-              The TrueBuild Promise
+              {content['services.promise.label']}
             </p>
             <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: '300',
               fontSize: isMobile ? '1.8rem' : '2.2rem', color: '#1a1a1a',
               margin: '0 0 20px', letterSpacing: '2px', lineHeight: '1.35' }}>
-              One Team.<br />One Vision.<br />Zero Stress.
+              {content['services.promise.title']}
             </h2>
             <div style={{ width: '40px', height: '1px', background: '#c9a96e', margin: '0 0 24px' }} />
             <p style={{ fontFamily: 'sans-serif', fontSize: '0.85rem', color: '#666',
               lineHeight: '1.9', margin: '0 0 24px' }}>
-              We manage every phase of the project, ensuring seamless transitions between
-              structural work and interior finishing.
+              {content['services.promise.text']}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {[
-                'Complete project management — start to finish',
-                'Seamless transition from structure to interiors',
-                'Transparent timelines and fixed-cost contracts',
-                'Dedicated site manager for every project',
+                content['services.promise.point1'],
+                content['services.promise.point2'],
+                content['services.promise.point3'],
+                content['services.promise.point4'],
               ].map((pt, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                   <span style={{ color: '#c9a96e', marginTop: '2px', fontSize: '0.7rem' }}>✓</span>
@@ -271,10 +272,10 @@ const Services = () => {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             {[
-              { num: '6+',   label: 'Years of Experience' },
-              { num: '200+', label: 'Projects Delivered'  },
-              { num: '100%', label: 'Client Satisfaction' },
-              { num: '1',    label: 'Team, Every Phase'   },
+              { num: '6+',   label: content['services.stat1.label'] },
+              { num: '200+', label: content['services.stat2.label'] },
+              { num: '100%', label: content['services.stat3.label'] },
+              { num: '1',    label: content['services.stat4.label'] },
             ].map((stat, i) => (
               <div key={i} style={{
                 background: '#fff',
@@ -305,16 +306,16 @@ const Services = () => {
       }}>
         <p style={{ fontSize: '0.6rem', letterSpacing: '5px', textTransform: 'uppercase',
           color: '#c9a96e', marginBottom: '16px', fontFamily: 'sans-serif' }}>
-          Start a Project
+          {content['services.cta.label']}
         </p>
         <h2 style={{ fontFamily: "'Georgia', serif", color: '#fff',
           fontSize: isMobile ? '1.6rem' : '2rem',
           fontWeight: '300', margin: '0 0 20px', letterSpacing: '1px' }}>
-          Have a project in mind?
+          {content['services.cta.title']}
         </h2>
         <p style={{ color: 'rgba(255,255,255,0.6)', fontFamily: 'sans-serif', fontSize: '0.85rem',
           lineHeight: '1.9', maxWidth: '480px', margin: '0 auto 32px' }}>
-          We handle everything — from architectural planning to the final finishing touch.
+          {content['services.cta.text']}
         </p>
         <Link to="/contact" style={{
           display: 'inline-block', padding: '14px 40px',

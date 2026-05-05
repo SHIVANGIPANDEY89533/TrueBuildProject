@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useSiteImages } from '../context/SiteImagesContext';
+import { useContent } from '../context/ContentContext';
 
 // ── Animated Counter Hook
 const useCounter = (target, duration = 2000, startCounting) => {
@@ -19,11 +20,6 @@ const useCounter = (target, duration = 2000, startCounting) => {
   return count;
 };
 
-const STATS = [
-  { value: 10, label: 'Years of Engineering Excellence', suffix: '+' },
-  { value: 300, label: 'Projects Delivered', suffix: '+' },
-  { value: 150, label: 'Happy Clients', suffix: '+' },
-];
 
 const HOW_WE_STARTED = [
   {
@@ -71,7 +67,14 @@ const Overview = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [statsVisible, setStatsVisible] = useState(false);
   const { images } = useSiteImages();
+  const { content } = useContent();
   const statsRef = useRef(null);
+
+  const STATS = [
+    { value: 10, label: content['overview.stat1.label'], suffix: '+' },
+    { value: 300, label: content['overview.stat2.label'], suffix: '+' },
+    { value: 150, label: content['overview.stat3.label'], suffix: '+' },
+  ];
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -116,7 +119,7 @@ const Overview = () => {
           <p style={{ fontSize: '0.6rem', letterSpacing: '4px', textTransform: 'uppercase',
             color: 'rgba(255,255,255,0.6)', fontFamily: 'sans-serif', marginBottom: '16px' }}>
             <Link to="/about" style={{ color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>About</Link>
-            {' '} / Overview
+            {' '} / {content['overview.hero.label']}
           </p>
           <h1 style={{
             fontFamily: "'Georgia', serif", color: '#fff',
@@ -124,7 +127,7 @@ const Overview = () => {
             fontWeight: '300', letterSpacing: '6px',
             textTransform: 'uppercase', margin: '0 0 20px',
           }}>
-            Our Story
+            {content['overview.hero.title']}
           </h1>
           <div style={{ width: '40px', height: '1px', background: '#c9a96e', margin: '0 auto 20px' }} />
           <p style={{
@@ -132,7 +135,7 @@ const Overview = () => {
             fontSize: isMobile ? '0.9rem' : '1.1rem',
             fontWeight: '300', maxWidth: '560px', lineHeight: '1.8',
           }}>
-            Two engineers. One vision. Your complete building partner.
+            {content['overview.hero.text']}
           </p>
         </div>
       </div>
@@ -146,11 +149,11 @@ const Overview = () => {
         <div style={{ textAlign: 'center', marginBottom: isMobile ? '40px' : '64px' }}>
           <p style={{ fontSize: '0.6rem', letterSpacing: '5px', textTransform: 'uppercase',
             color: '#c9a96e', marginBottom: '12px', fontFamily: 'sans-serif' }}>
-            How We Started
+            {content['overview.intro.label']}
           </p>
           <h2 style={{ fontFamily: "'Georgia', serif", fontSize: isMobile ? '1.8rem' : '2.4rem',
             fontWeight: '300', color: '#1a1a1a', margin: '0 0 16px', letterSpacing: '1px' }}>
-            Built on experience. Driven by purpose.
+            {content['overview.intro.title']}
           </h2>
           <div style={{ width: '40px', height: '1px', background: '#c9a96e', margin: '0 auto' }} />
         </div>
@@ -199,12 +202,12 @@ const Overview = () => {
         <p style={{ textAlign: 'center', fontSize: '0.6rem', letterSpacing: '5px',
           textTransform: 'uppercase', color: '#c9a96e',
           marginBottom: '16px', fontFamily: 'sans-serif' }}>
-          Our Numbers
+          {content['overview.numbers.label']}
         </p>
         <h2 style={{ textAlign: 'center', fontFamily: "'Georgia', serif",
           fontSize: isMobile ? '1.6rem' : '2rem', fontWeight: '300',
           color: '#fff', margin: '0 0 60px', letterSpacing: '1px' }}>
-          Numbers that speak for themselves
+          {content['overview.numbers.title']}
         </h2>
         <div style={{
           display: 'grid',
@@ -243,12 +246,12 @@ const Overview = () => {
         <p style={{ textAlign: 'center', fontSize: '0.6rem', letterSpacing: '5px',
           textTransform: 'uppercase', color: '#c9a96e',
           marginBottom: '16px', fontFamily: 'sans-serif' }}>
-          Working Process
+          {content['overview.process.label']}
         </p>
         <h2 style={{ textAlign: 'center', fontFamily: "'Georgia', serif",
           fontSize: isMobile ? '1.6rem' : '2.2rem', fontWeight: '300',
           color: '#1a1a1a', margin: '0 0 60px', letterSpacing: '1px' }}>
-          How we bring your vision to life
+          {content['overview.process.title']}
         </h2>
         <div style={{
           display: 'grid',
@@ -299,17 +302,17 @@ const Overview = () => {
         <div style={{ position: 'relative', zIndex: 2, textAlign: 'center' }}>
           <p style={{ fontSize: '0.6rem', letterSpacing: '5px', textTransform: 'uppercase',
             color: '#c9a96e', marginBottom: '16px', fontFamily: 'sans-serif' }}>
-            Get In Touch
+            {content['overview.cta.label']}
           </p>
           <h2 style={{ fontFamily: "'Georgia', serif", color: '#fff',
             fontSize: isMobile ? '1.8rem' : '2.8rem',
             fontWeight: '300', margin: '0 0 20px', letterSpacing: '2px' }}>
-            Ready to start your project?
+            {content['overview.cta.title']}
           </h2>
           <p style={{ color: 'rgba(255,255,255,0.7)', fontFamily: 'sans-serif',
             fontSize: '0.88rem', lineHeight: '1.9', marginBottom: '36px',
             maxWidth: '500px', margin: '0 auto 36px' }}>
-            From interior design to full building construction — we handle it all under one roof.
+            {content['overview.cta.text']}
           </p>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link to="/contact" style={{

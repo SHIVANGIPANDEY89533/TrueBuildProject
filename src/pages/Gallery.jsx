@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSiteImages } from '../context/SiteImagesContext';
+import { useContent } from '../context/ContentContext';
 
 const GALLERY_ITEMS = [
   { id: 1,  category: 'Interiors', key: 'gallery.item1',  title: 'Living Room — Juhu Residence',    size: 'large' },
@@ -25,7 +26,8 @@ const Gallery = () => {
   const [lightboxTitle,  setLightboxTitle]  = useState('');
   const [isMobile,       setIsMobile]       = useState(window.innerWidth < 768);
   const [hoveredId,      setHoveredId]      = useState(null);
-  const { images } = useSiteImages(); // ✅
+  const { images } = useSiteImages();
+  const { content } = useContent();
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -48,7 +50,6 @@ const Gallery = () => {
 
       {/* ── HERO ── */}
       <div style={{ position: 'relative', height: isMobile ? '45vh' : '55vh', overflow: 'hidden' }}>
-        {/* ✅ gallery.hero */}
         <img
           src={images['gallery.hero']}
           alt="Gallery"
@@ -67,7 +68,7 @@ const Gallery = () => {
           <p style={{ fontSize: '0.6rem', letterSpacing: '4px', textTransform: 'uppercase',
             color: 'rgba(255,255,255,0.6)', fontFamily: 'sans-serif', marginBottom: '16px' }}>
             <Link to="/about" style={{ color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>About</Link>
-            {' '} / Gallery
+            {' '} / {content['gallery.hero.label']}
           </p>
           <h1 style={{
             fontFamily: "'Georgia', serif", color: '#fff',
@@ -75,13 +76,13 @@ const Gallery = () => {
             fontWeight: '300', letterSpacing: '6px',
             textTransform: 'uppercase', margin: '0 0 16px',
           }}>
-            The Gallery
+            {content['gallery.hero.title']}
           </h1>
           <div style={{ width: '40px', height: '1px', background: '#c9a96e', margin: '0 auto 18px' }} />
           <p style={{ color: 'rgba(255,255,255,0.75)', fontFamily: "'Georgia', serif",
             fontSize: isMobile ? '0.85rem' : '1rem', fontWeight: '300',
             maxWidth: '480px', lineHeight: '1.8', letterSpacing: '0.5px' }}>
-            A visual journey through spaces we have imagined, crafted, and brought to life.
+            {content['gallery.hero.text']}
           </p>
         </div>
       </div>

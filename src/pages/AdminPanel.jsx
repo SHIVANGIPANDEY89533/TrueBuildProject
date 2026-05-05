@@ -1496,7 +1496,12 @@ const ServiceManager = () => {
 // CONTENT MANAGER (Text & Non-Image Content)
 // ─────────────────────────────────────────────
 const ContentManager = () => {
-  const { content, updateContent, resetToDefault, overrideCount, DEFAULT_CONTENT } = useContent();
+  const { 
+    content, updateContent, resetToDefault, resetAll, 
+    overrideCount, DEFAULT_CONTENT, CONTENT_SECTIONS, CONTENT_LABELS 
+  } = useContent();
+
+  const [activeSection, setActiveSection] = useState(CONTENT_SECTIONS[0].key);
   const [editingKey, setEditingKey] = useState(null);
   const [editingValue, setEditingValue] = useState('');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -1509,9 +1514,11 @@ const ContentManager = () => {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const contentKeys = Object.keys(DEFAULT_CONTENT).filter(k =>
-    searchQuery === '' || k.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (content[k] || DEFAULT_CONTENT[k]).toLowerCase().includes(searchQuery.toLowerCase())
+  const sectionKeys = Object.keys(DEFAULT_CONTENT).filter(k => 
+    k.startsWith(activeSection + '.') &&
+    (searchQuery === '' || 
+     (CONTENT_LABELS[k] || k).toLowerCase().includes(searchQuery.toLowerCase()) ||
+     (content[k] || DEFAULT_CONTENT[k]).toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const handleEdit = (key) => {
@@ -1520,14 +1527,14 @@ const ContentManager = () => {
   };
 
   const handleSave = () => {
-    if (!editingKey || editingValue === '') return;
+    if (!editingKey) return;
     updateContent(editingKey, editingValue);
     setSavedKey(editingKey);
     setTimeout(() => setSavedKey(null), 2500);
     setEditingKey(null);
   };
 
-  const isModified = (key) => (content[key] || DEFAULT_CONTENT[key]) !== DEFAULT_CONTENT[key];
+  const isModified = (key) => content[key] !== DEFAULT_CONTENT[key];
 
   return (
     <div style={{
@@ -1536,16 +1543,15 @@ const ContentManager = () => {
     }}>
       {/* ── SIDEBAR ── */}
       <div style={{
-        width: isMobile ? '100%' : '260px',
+        width: isMobile ? '100%' : '240px',
         flexShrink: 0, background: '#1a1a1a',
         overflowY: isMobile ? 'visible' : 'auto',
-        padding: '20px',
       }}>
-        <div style={{ marginBottom: '20px' }}>
+        <div style={{ padding: '20px 18px 12px' }}>
           <p style={{ fontFamily: 'sans-serif', fontSize: '0.55rem',
             letterSpacing: '3px', textTransform: 'uppercase',
-            color: 'rgba(255,255,255,0.4)', margin: '0 0 8px' }}>
-            Content Modified
+            color: 'rgba(255,255,255,0.4)', margin: '0 0 4px' }}>
+            Text Items Customised
           </p>
           <p style={{ fontFamily: "'Georgia', serif", fontSize: '1.6rem',
             color: '#c9a96e', margin: 0, lineHeight: 1 }}>
@@ -1555,121 +1561,172 @@ const ContentManager = () => {
           </p>
         </div>
 
-        <input
-          placeholder="🔍 Search content..."
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          style={{
-            width: '100%', padding: '10px', border: '1px solid #444',
-            outline: 'none', fontSize: '0.75rem', fontFamily: 'sans-serif',
-            background: '#2a2a2a', color: '#fff', marginBottom: '16px', boxSizing: 'border-box',
-          }}
-        />
+        <div style={{ display: isMobile ? 'flex' : 'block',
+          flexWrap: 'wrap', gap: '2px', padding: isMobile ? '0 12px 12px' : '0' }}>
+          {CONTENT_SECTIONS.map(sec => {
+            const secOverrides = Object.keys(DEFAULT_CONTENT).filter(
+              k => k.startsWith(sec.key + '.') && content[k] !== DEFAULT_CONTENT[k]
+            ).length;
+            return (
+              <button key={sec.key} onClick={() => setActiveSection(sec.key)} style={{
+                display: isMobile ? 'inline-flex' : 'flex',
+                alignItems: 'center', justifyContent: 'space-between',
+                width: isMobile ? 'auto' : '100%',
+                textAlign: 'left', padding: '12px 18px',
+                background: activeSection === sec.key ? 'rgba(201,169,110,0.15)' : 'transparent',
+                border: isMobile
+                  ? activeSection === sec.key ? '1px solid #c9a96e' : '1px solid rgba(255,255,255,0.1)'
+                  : 'none',
+                borderLeft: !isMobile
+                  ? activeSection === sec.key ? '3px solid #c9a96e' : '3px solid transparent'
+                  : undefined,
+                color: activeSection === sec.key ? '#fff' : 'rgba(255,255,255,0.5)',
+                fontSize: '0.7rem', fontFamily: 'sans-serif',
+                cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap',
+              }}>
+                <span>{sec.label}</span>
+                {secOverrides > 0 && (
+                  <span style={{
+                    marginLeft: '8px', background: '#c9a96e',
+                    color: '#fff', fontSize: '0.52rem',
+                    padding: '1px 6px', borderRadius: '10px',
+                  }}>
+                    {secOverrides}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
 
-        <button onClick={() => {
-          if (window.confirm('Reset ALL content to defaults?')) {
-            // Note: Need to add resetAll to ContentContext
-            window.location.reload();
-          }
-        }} style={{
-          width: '100%', padding: '10px',
-          background: 'rgba(231,76,60,0.12)',
-          border: '1px solid rgba(231,76,60,0.3)',
-          color: '#e74c3c', cursor: 'pointer',
-          fontSize: '0.6rem', letterSpacing: '2px',
-          textTransform: 'uppercase', fontFamily: 'sans-serif',
-        }}
-          onMouseEnter={e => e.currentTarget.style.background = 'rgba(231,76,60,0.25)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'rgba(231,76,60,0.12)'}>
-          ↺ Reset All
-        </button>
+        <div style={{ padding: '14px 16px' }}>
+          <button onClick={() => {
+            if (window.confirm('Reset ALL site text to defaults?')) resetAll();
+          }} style={{
+            width: '100%', padding: '10px',
+            background: 'rgba(231,76,60,0.12)',
+            border: '1px solid rgba(231,76,60,0.3)',
+            color: '#e74c3c', cursor: 'pointer',
+            fontSize: '0.6rem', letterSpacing: '2px',
+            textTransform: 'uppercase', fontFamily: 'sans-serif',
+          }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(231,76,60,0.25)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(231,76,60,0.12)'}>
+            ↺ Reset All Text
+          </button>
+        </div>
       </div>
 
       {/* ── MAIN PANEL ── */}
       <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
-        <h3 style={{ fontFamily: "'Georgia', serif", fontSize: '1.2rem',
-          fontWeight: '300', color: '#1a1a1a', margin: '0 0 20px' }}>
-          Site Text & Content Manager
-          <span style={{ fontFamily: 'sans-serif', fontSize: '0.7rem',
-            color: '#bbb', marginLeft: '12px' }}>
-            ({contentKeys.length} items)
-          </span>
-        </h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between',
+          alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+          <h3 style={{ fontFamily: "'Georgia', serif", fontSize: '1.2rem',
+            fontWeight: '300', color: '#1a1a1a', margin: 0 }}>
+            {CONTENT_SECTIONS.find(s => s.key === activeSection)?.label} Text
+            <span style={{ fontFamily: 'sans-serif', fontSize: '0.7rem',
+              color: '#bbb', marginLeft: '12px' }}>
+              ({sectionKeys.length} items)
+            </span>
+          </h3>
 
-        {editingKey ? (
-          <div style={{
-            background: '#fff', padding: '24px',
-            border: '1px solid #e8e3db', marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h4 style={{ fontFamily: 'sans-serif', fontSize: '0.9rem', color: '#1a1a1a', margin: 0 }}>
-                Editing: <code style={{ color: '#c9a96e' }}>{editingKey}</code>
-              </h4>
-              <button onClick={() => { 
-                resetToDefault(editingKey);
-                setEditingKey(null);
-              }} style={{
-                padding: '6px 12px', background: 'transparent',
-                border: '1px solid #e8e3db', color: '#e74c3c',
-                cursor: 'pointer', fontSize: '0.6rem', letterSpacing: '1px',
-                textTransform: 'uppercase', fontFamily: 'sans-serif',
-              }}>
-                ↺ Reset to Default
-              </button>
-            </div>
-            <textarea
-              value={editingValue}
-              onChange={e => setEditingValue(e.target.value)}
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <input
+              placeholder="🔍 Search text content..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
               style={{
-                width: '100%', minHeight: '120px', padding: '12px',
-                border: '1px solid #ddd', fontFamily: 'monospace',
-                fontSize: '0.85rem', marginBottom: '16px', boxSizing: 'border-box',
+                padding: '8px 14px', border: '1px solid #e8e3db',
+                outline: 'none', fontSize: '0.8rem',
+                fontFamily: 'sans-serif', width: '220px', background: '#fff',
               }}
             />
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={handleSave} style={{
-                flex: 1, padding: '12px', background: '#c9a96e', color: '#fff',
-                border: 'none', cursor: 'pointer', fontSize: '0.65rem',
-                letterSpacing: '2px', textTransform: 'uppercase', fontFamily: 'sans-serif',
-              }}>
-                ✓ Save
-              </button>
-              <button onClick={() => setEditingKey(null)} style={{
-                padding: '12px 16px', background: 'transparent',
-                border: '1px solid #e8e3db', color: '#888',
-                cursor: 'pointer', fontSize: '0.6rem', letterSpacing: '1px',
-                textTransform: 'uppercase', fontFamily: 'sans-serif',
-              }}>
-                Cancel
-              </button>
-            </div>
           </div>
-        ) : null}
+        </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
-          {contentKeys.map(key => (
+        {/* Text Items List */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {sectionKeys.map(key => (
             <div key={key} style={{
-              background: '#fff', padding: '16px',
-              border: isModified(key) ? '2px solid #c9a96e' : '1px solid #e8e3db',
-              boxShadow: savedKey === key ? '0 0 0 2px #2ecc71' : 'none',
-              transition: 'box-shadow 0.3s',
+              background: '#fff', padding: '20px',
+              border: '1px solid',
+              borderColor: savedKey === key ? '#2ecc71' : isModified(key) ? '#c9a96e' : '#e8e3db',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+              transition: 'all 0.3s',
             }}>
-              <p style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: '#999', margin: '0 0 8px' }}>
-                {key}
-              </p>
-              <p style={{ fontFamily: 'sans-serif', fontSize: '0.85rem', color: '#1a1a1a',
-                margin: '0 0 12px', lineHeight: '1.5', maxHeight: '80px', overflow: 'hidden' }}>
-                {content[key] || DEFAULT_CONTENT[key] || '—'}
-              </p>
-              <button onClick={() => handleEdit(key)} style={{
-                width: '100%', padding: '8px', background: '#f0ebe3', color: '#1a1a1a',
-                border: 'none', cursor: 'pointer', fontSize: '0.65rem',
-                letterSpacing: '1px', textTransform: 'uppercase', fontFamily: 'sans-serif',
-              }}>
-                Edit
-              </button>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                <div>
+                  <p style={{ fontSize: '0.55rem', letterSpacing: '2px', textTransform: 'uppercase', color: '#c9a96e', margin: '0 0 4px', fontFamily: 'sans-serif' }}>
+                    {CONTENT_LABELS[key] || key}
+                  </p>
+                  <code style={{ fontSize: '0.6rem', color: '#bbb', background: '#f8f8f8', padding: '2px 6px' }}>{key}</code>
+                </div>
+                {isModified(key) && (
+                  <span style={{ fontSize: '0.5rem', background: '#c9a96e', color: '#fff', padding: '2px 8px', letterSpacing: '1px', textTransform: 'uppercase', fontFamily: 'sans-serif' }}>Modified</span>
+                )}
+              </div>
+
+              {editingKey === key ? (
+                <div>
+                  <textarea
+                    value={editingValue}
+                    onChange={e => setEditingValue(e.target.value)}
+                    style={{
+                      width: '100%', minHeight: '100px', padding: '12px',
+                      border: '1px solid #1a1a1a', outline: 'none',
+                      fontFamily: 'sans-serif', fontSize: '0.85rem', lineHeight: '1.6',
+                      background: '#fff', marginBottom: '12px', boxSizing: 'border-box',
+                    }}
+                    autoFocus
+                  />
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={handleSave} style={{
+                      padding: '8px 20px', background: '#1a1a1a', color: '#fff',
+                      border: 'none', cursor: 'pointer', fontSize: '0.65rem',
+                      letterSpacing: '2px', textTransform: 'uppercase', fontFamily: 'sans-serif',
+                    }}>Save Changes</button>
+                    <button onClick={() => setEditingKey(null)} style={{
+                      padding: '8px 20px', background: 'transparent', color: '#888',
+                      border: '1px solid #ddd', cursor: 'pointer', fontSize: '0.65rem',
+                      letterSpacing: '2px', textTransform: 'uppercase', fontFamily: 'sans-serif',
+                    }}>Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '20px' }}>
+                  <div style={{ flex: 1 }}>
+                    <p style={{
+                      fontFamily: 'sans-serif', fontSize: '0.9rem', color: '#444',
+                      lineHeight: '1.6', margin: 0, whiteSpace: 'pre-wrap',
+                    }}>
+                      {content[key] || DEFAULT_CONTENT[key]}
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button onClick={() => handleEdit(key)} style={{
+                      padding: '7px 14px', background: '#f5f0ea', color: '#1a1a1a',
+                      border: 'none', cursor: 'pointer', fontSize: '0.6rem',
+                      letterSpacing: '1.5px', textTransform: 'uppercase', fontFamily: 'sans-serif',
+                    }} onMouseEnter={e => e.target.style.background = '#e8e3db'} onMouseLeave={e => e.target.style.background = '#f5f0ea'}>Edit</button>
+                    {isModified(key) && (
+                      <button onClick={() => resetToDefault(key)} style={{
+                        padding: '7px 10px', background: 'transparent', color: '#e74c3c',
+                        border: '1px solid #fee', cursor: 'pointer', fontSize: '0.7rem',
+                      }} title="Reset to default">↺</button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
+
+          {sectionKeys.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+              <p style={{ color: '#bbb', fontFamily: 'sans-serif', fontSize: '0.85rem' }}>
+                {searchQuery ? `No text matches "${searchQuery}"` : 'No text items in this section'}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -28,7 +28,7 @@ const About = () => {
           textTransform: 'uppercase', color: '#c9a96e',
           marginBottom: '14px', fontFamily: 'sans-serif',
         }}>
-          Our Story
+          {content['about.hero.label']}
         </p>
         <h1 style={{
           fontFamily: "'Georgia', serif",
@@ -36,7 +36,7 @@ const About = () => {
           fontWeight: '300', letterSpacing: '5px',
           color: '#1a1a1a', textTransform: 'uppercase', margin: '0 0 12px',
         }}>
-          {content['about.title.1'] || 'Two engineers.'}
+          {content['about.hero.title1']}
         </h1>
         <h1 style={{
           fontFamily: "'Georgia', serif",
@@ -44,7 +44,7 @@ const About = () => {
           fontWeight: '300', letterSpacing: '5px',
           color: '#1a1a1a', textTransform: 'uppercase', margin: '0 0 8px',
         }}>
-          {content['about.title.2'] || 'One vision.'}
+          {content['about.hero.title2']}
         </h1>
         <h2 style={{
           fontFamily: "'Georgia', serif",
@@ -53,7 +53,7 @@ const About = () => {
           color: '#c9a96e', textTransform: 'none', margin: '0 0 24px',
           fontStyle: 'italic',
         }}>
-          Your complete building partner.
+          {content['about.hero.subtitle']}
         </h2>
         <div style={{ width: '40px', height: '1px', background: '#c9a96e', marginBottom: '28px' }} />
         <p style={{
@@ -61,9 +61,7 @@ const About = () => {
           color: '#666', lineHeight: '2', fontWeight: '300',
           maxWidth: '600px',
         }}>
-          TrueBuild Projects was founded by two experienced engineers who shared a simple belief: 
-          that clients deserve a single, trusted partner to take their project from 
-          Construction and Interior projects all the way through to the final piece of furniture.
+          {content['about.hero.text']}
         </p>
       </div>
 
@@ -110,21 +108,20 @@ const About = () => {
                   textTransform: 'uppercase', color: '#c9a96e',
                   marginBottom: '10px', fontFamily: 'sans-serif',
                 }}>
-                  The Company
+                  {content['about.card1.label']}
                 </p>
                 <h3 style={{
                   fontFamily: "'Georgia', serif", fontSize: '1.5rem',
                   fontWeight: '300', color: '#1a1a1a',
                   margin: '0 0 12px', letterSpacing: '1px',
                 }}>
-                  Overview
+                  {content['about.card1.title']}
                 </h3>
                 <p style={{
                   fontFamily: 'sans-serif', fontSize: '0.8rem',
                   color: '#888', lineHeight: '1.8', margin: '0 0 22px',
                 }}>
-                  Explore our story, how we started, the working process
-                  and what makes TrueBuild Projects truly unique.
+                  {content['about.card1.text']}
                 </p>
                 <span style={{
                   fontSize: '0.62rem', letterSpacing: '3px',
@@ -132,7 +129,7 @@ const About = () => {
                   color: '#1a1a1a', borderBottom: '1px solid #1a1a1a',
                   paddingBottom: '2px',
                 }}>
-                  Explore →
+                  {content['about.card1.link']}
                 </span>
               </div>
             </div>
@@ -169,21 +166,20 @@ const About = () => {
                   textTransform: 'uppercase', color: '#c9a96e',
                   marginBottom: '10px', fontFamily: 'sans-serif',
                 }}>
-                  Photography
+                  {content['about.card2.label']}
                 </p>
                 <h3 style={{
                   fontFamily: "'Georgia', serif", fontSize: '1.5rem',
                   fontWeight: '300', color: '#1a1a1a',
                   margin: '0 0 12px', letterSpacing: '1px',
                 }}>
-                  Gallery
+                  {content['about.card2.title']}
                 </h3>
                 <p style={{
                   fontFamily: 'sans-serif', fontSize: '0.8rem',
                   color: '#888', lineHeight: '1.8', margin: '0 0 22px',
                 }}>
-                  A visual journey through spaces we have imagined, crafted and brought
-                  to life — interiors, furniture, and construction.
+                  {content['about.card2.text']}
                 </p>
                 <span style={{
                   fontSize: '0.62rem', letterSpacing: '3px',
@@ -191,7 +187,7 @@ const About = () => {
                   color: '#1a1a1a', borderBottom: '1px solid #1a1a1a',
                   paddingBottom: '2px',
                 }}>
-                  View Gallery →
+                  {content['about.card2.link']}
                 </span>
               </div>
             </div>
@@ -211,7 +207,7 @@ const About = () => {
           textTransform: 'uppercase', color: '#c9a96e',
           marginBottom: '20px', fontFamily: 'sans-serif',
         }}>
-          The Philosophy
+          {content['about.quote.label']}
         </p>
         <blockquote style={{
           fontFamily: "'Georgia', serif", color: '#fff',
@@ -220,15 +216,16 @@ const About = () => {
           maxWidth: '700px', margin: '0 auto 20px',
           fontStyle: 'italic', letterSpacing: '0.5px',
         }}>
-          "We don't just build structures. We build trust — from the first stone to the final finish."
+          {content['about.quote.text']}
         </blockquote>
         <p style={{
           fontFamily: 'sans-serif', fontSize: '0.65rem',
           letterSpacing: '3px', textTransform: 'uppercase', color: '#c9a96e',
         }}>
-          — TrueBuild Projects
+          {content['about.quote.author']}
         </p>
       </section>
+
 
     </main>
   );
