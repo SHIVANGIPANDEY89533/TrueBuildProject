@@ -144,8 +144,12 @@ const Home = () => {
           display: 'flex', gap: '3px',
           flexDirection: isMobile ? 'column' : 'row',
         }}>
-          {SERVICES.map(s => (
-            <ServiceCard key={s.id} title={s.title} img={s.img} />
+          {SERVICES.map((s, idx) => (
+            <ServiceCard
+              key={s.id}
+              title={s.title}
+              img={images[`home.services.card${idx + 1}`] || s.img}
+            />
           ))}
         </div>
       </section>
@@ -177,11 +181,11 @@ const Home = () => {
           gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
           gap: '3px',
         }}>
-          {PROJECTS.map(project => (
+          {PROJECTS.map((project, idx) => (
             <div key={project.id} style={{
               position: 'relative', overflow: 'hidden', height: '380px',
             }}>
-              <img src={project.img} alt={project.title} style={{
+              <img src={images[`home.projects.card${idx + 1}`] || project.img} alt={project.title} style={{
                 width: '100%', height: '100%',
                 objectFit: 'cover', display: 'block',
                 transition: 'transform 0.6s ease',

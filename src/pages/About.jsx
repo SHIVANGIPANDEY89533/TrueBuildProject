@@ -95,7 +95,7 @@ const About = () => {
             }}>
               <div style={{ height: '240px', overflow: 'hidden' }}>
                 <img
-                  src={images['about.gallery.image1']}
+                  src={images['about.card.overview']}
                   alt="Overview"
                   style={{
                     width: '100%', height: '100%', objectFit: 'cover',
@@ -154,7 +154,7 @@ const About = () => {
             }}>
               <div style={{ height: '240px', overflow: 'hidden' }}>
                 <img
-                  src={images['about.gallery.image2']}
+                  src={images['about.card.gallery']}
                   alt="Gallery"
                   style={{
                     width: '100%', height: '100%', objectFit: 'cover',

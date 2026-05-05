@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import emailjs from '@emailjs/browser';
+import { useSiteImages } from '../context/SiteImagesContext';
 
 
 // ── EMAILJS CONFIG
@@ -59,6 +60,7 @@ const fieldStyle = {
 
 const Contact = () => {
   const [isMobile,  setIsMobile]  = useState(window.innerWidth < 768);
+  const { images } = useSiteImages();
   const [form,      setForm]      = useState({
     name: '', email: '', phone: '',
     enquiryType: 'Interiors Project', message: '',
@@ -123,7 +125,7 @@ const Contact = () => {
       {/* ── HERO ── */}
       <div style={{ position: 'relative', height: isMobile ? '44vh' : '52vh', overflow: 'hidden' }}>
         <img
-          src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=1600&q=80"
+          src={images['contact.hero']}
           alt="Contact Us"
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
         />
