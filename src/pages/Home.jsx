@@ -146,35 +146,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── SECTION 3.5: LANDSCAPE & GARDENING ── */}
-      <section style={{ 
-        height: isMobile ? '65vh' : '85vh', 
-        position: 'relative', 
-        overflow: 'hidden',
-        marginTop: '3px'
-      }}>
-        <img src={img16} alt="Landscape & Gardening" style={{
-          width: '100%', height: '100%',
-          objectFit: 'cover', display: 'block',
-        }} />
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'rgba(0,0,0,0.15)',
-          display: 'flex', flexDirection: 'column',
-          justifyContent: 'flex-end',
-          padding: isMobile ? '40px 24px' : '80px 60px',
-          boxSizing: 'border-box',
-        }}>
-          <h2 style={{
-            color: '#fff', fontFamily: "'Georgia', serif",
-            fontSize: isMobile ? '1.8rem' : '2.8rem',
-            fontWeight: '300', letterSpacing: '4px',
-            textTransform: 'uppercase', margin: '0 0 10px',
-          }}>{content['home.landscape.title']}</h2>
-          <div style={{ width: '55px', height: '1px', background: '#c9a96e' }} />
-        </div>
-      </section>
-
       {/* ── SECTION 4: SERVICES ── */}
       <section id="services" style={{ background: '#fff', paddingTop: '80px', paddingBottom: '80px' }}>
         <p style={{

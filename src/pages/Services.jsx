@@ -234,64 +234,39 @@ const Services = () => {
         boxSizing: 'border-box',
       }}>
         <div style={{
-          maxWidth: '1100px', margin: '0 auto',
-          display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-          gap: isMobile ? '40px' : '80px', alignItems: 'center',
+          maxWidth: '800px', margin: '0 auto',
         }}>
-          <div>
-            <p style={{ fontSize: '0.6rem', letterSpacing: '5px', textTransform: 'uppercase',
-              color: '#c9a96e', marginBottom: '16px', fontFamily: 'sans-serif' }}>
-              {content['services.promise.label']}
-            </p>
-            <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: '300',
-              fontSize: isMobile ? '1.8rem' : '2.2rem', color: '#1a1a1a',
-              margin: '0 0 20px', letterSpacing: '2px', lineHeight: '1.35' }}>
-              {content['services.promise.title']}
-            </h2>
-            <div style={{ width: '40px', height: '1px', background: '#c9a96e', margin: '0 0 24px' }} />
-            <p style={{ fontFamily: 'sans-serif', fontSize: '0.85rem', color: '#666',
-              lineHeight: '1.9', margin: '0 0 24px' }}>
-              {content['services.promise.text']}
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {[
-                content['services.promise.point1'],
-                content['services.promise.point2'],
-                content['services.promise.point3'],
-                content['services.promise.point4'],
-              ].map((pt, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                  <span style={{ color: '#c9a96e', marginTop: '2px', fontSize: '0.7rem' }}>✓</span>
-                  <span style={{ fontFamily: 'sans-serif', fontSize: '0.8rem', color: '#555', lineHeight: '1.6' }}>
-                    {pt}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <p style={{ fontSize: '0.6rem', letterSpacing: '5px', textTransform: 'uppercase',
+            color: '#c9a96e', marginBottom: '16px', fontFamily: 'sans-serif', textAlign: isMobile ? 'left' : 'center' }}>
+            {content['services.promise.label']}
+          </p>
+          <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: '300',
+            fontSize: isMobile ? '1.8rem' : '2.2rem', color: '#1a1a1a',
+            margin: '0 0 20px', letterSpacing: '2px', lineHeight: '1.35', textAlign: isMobile ? 'left' : 'center' }}>
+            {content['services.promise.title']}
+          </h2>
+          <div style={{ width: '40px', height: '1px', background: '#c9a96e', margin: isMobile ? '0 0 24px' : '0 auto 24px' }} />
+          <p style={{ fontFamily: 'sans-serif', fontSize: '0.85rem', color: '#666',
+            lineHeight: '1.9', margin: '0 0 24px', textAlign: isMobile ? 'left' : 'center' }}>
+            {content['services.promise.text']}
+          </p>
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '12px',
+            alignItems: isMobile ? 'flex-start' : 'center'
+          }}>
             {[
-              { num: '6+',   label: content['services.stat1.label'] },
-              { num: '200+', label: content['services.stat2.label'] },
-              { num: '100%', label: content['services.stat3.label'] },
-              { num: '1',    label: content['services.stat4.label'] },
-            ].map((stat, i) => (
-              <div key={i} style={{
-                background: '#fff',
-                padding: isMobile ? '24px 16px' : '32px 24px',
-                textAlign: 'center',
-                boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
-              }}>
-                <p style={{ fontFamily: "'Georgia', serif",
-                  fontSize: isMobile ? '2rem' : '2.4rem',
-                  color: '#c9a96e', fontWeight: '300', margin: '0 0 8px', letterSpacing: '2px' }}>
-                  {stat.num}
-                </p>
-                <p style={{ fontFamily: 'sans-serif', fontSize: '0.6rem', color: '#888',
-                  letterSpacing: '2px', textTransform: 'uppercase', margin: 0 }}>
-                  {stat.label}
-                </p>
+              content['services.promise.point1'],
+              content['services.promise.point2'],
+              content['services.promise.point3'],
+              content['services.promise.point4'],
+            ].map((pt, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                <span style={{ color: '#c9a96e', marginTop: '2px', fontSize: '0.7rem' }}>✓</span>
+                <span style={{ fontFamily: 'sans-serif', fontSize: '0.8rem', color: '#555', lineHeight: '1.6' }}>
+                  {pt}
+                </span>
               </div>
             ))}
           </div>
