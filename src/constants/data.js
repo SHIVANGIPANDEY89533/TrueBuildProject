@@ -6,6 +6,7 @@ import img8  from '../assets/images/img8.jpeg';
 import img10 from '../assets/images/img10.jpeg';
 import img11 from '../assets/images/img11.jpeg';
 import img12 from '../assets/images/img12.jpeg';
+import img16 from '../assets/images/img16.jpeg';
 
 // ✅ Walkthroughs REMOVED from NAV_LINKS
 export const NAV_LINKS = [
@@ -34,6 +35,7 @@ export const SERVICES = [
   { id: 2, title: "MEP Services",              img: img3  },
   { id: 3, title: "Finishing & Aesthetics",    img: img4  },
   { id: 4, title: "Interior Design",           img: img10 },
+  { id: 5, title: "Landscape & Gardening",     img: img16 },
 ];
 
 export const PROJECTS = [

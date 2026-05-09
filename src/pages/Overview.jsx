@@ -3,22 +3,6 @@ import { Link } from 'react-router-dom';
 import { useSiteImages } from '../context/SiteImagesContext';
 import { useContent } from '../context/ContentContext';
 
-// ── Animated Counter Hook
-const useCounter = (target, duration = 2000, startCounting) => {
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    if (!startCounting) return;
-    let start = 0;
-    const step = target / (duration / 16);
-    const timer = setInterval(() => {
-      start += step;
-      if (start >= target) { setCount(target); clearInterval(timer); }
-      else setCount(Math.floor(start));
-    }, 16);
-    return () => clearInterval(timer);
-  }, [startCounting, target]);
-  return count;
-};
 
 
 const HOW_WE_STARTED = [
@@ -65,16 +49,10 @@ const PROCESS_STEPS = [
 
 const Overview = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [statsVisible, setStatsVisible] = useState(false);
   const { images } = useSiteImages();
   const { content } = useContent();
-  const statsRef = useRef(null);
 
-  const STATS = [
-    { value: 10, label: content['overview.stat1.label'], suffix: '+' },
-    { value: 300, label: content['overview.stat2.label'], suffix: '+' },
-    { value: 150, label: content['overview.stat3.label'], suffix: '+' },
-  ];
+  const STATS = [];
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -82,19 +60,6 @@ const Overview = () => {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setStatsVisible(true); },
-      { threshold: 0.3 }
-    );
-    if (statsRef.current) observer.observe(statsRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  const c0 = useCounter(STATS[0].value, 2000, statsVisible);
-  const c1 = useCounter(STATS[1].value, 2000, statsVisible);
-  const c2 = useCounter(STATS[2].value, 2000, statsVisible);
-  const counts = [c0, c1, c2];
 
   return (
     <main style={{ paddingTop: '80px', minHeight: '100vh', background: '#faf8f5' }}>
@@ -193,50 +158,6 @@ const Overview = () => {
         </div>
       </section>
 
-      {/* SECTION 3: ANIMATED STATS */}
-      <section ref={statsRef} style={{
-        background: '#1a1a1a',
-        padding: isMobile ? '60px 24px' : '80px 60px',
-        boxSizing: 'border-box',
-      }}>
-        <p style={{ textAlign: 'center', fontSize: '0.6rem', letterSpacing: '5px',
-          textTransform: 'uppercase', color: '#c9a96e',
-          marginBottom: '16px', fontFamily: 'sans-serif' }}>
-          {content['overview.numbers.label']}
-        </p>
-        <h2 style={{ textAlign: 'center', fontFamily: "'Georgia', serif",
-          fontSize: isMobile ? '1.6rem' : '2rem', fontWeight: '300',
-          color: '#fff', margin: '0 0 60px', letterSpacing: '1px' }}>
-          {content['overview.numbers.title']}
-        </h2>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-          gap: isMobile ? '40px' : '0',
-          maxWidth: '900px', margin: '0 auto',
-          textAlign: 'center',
-        }}>
-          {STATS.map((stat, idx) => (
-            <div key={idx} style={{
-              padding: isMobile ? '0' : '0 40px',
-              borderRight: !isMobile && idx < STATS.length - 1
-                ? '1px solid rgba(255,255,255,0.1)' : 'none',
-            }}>
-              <div style={{ fontFamily: "'Georgia', serif",
-                fontSize: isMobile ? '3rem' : '4rem',
-                color: '#c9a96e', fontWeight: '300',
-                lineHeight: 1, marginBottom: '12px' }}>
-                {counts[idx]}{stat.suffix}
-              </div>
-              <p style={{ fontFamily: 'sans-serif', fontSize: '0.72rem',
-                letterSpacing: '2px', textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: '1.6' }}>
-                {stat.label}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* SECTION 4: WORKING PROCESS */}
       <section style={{

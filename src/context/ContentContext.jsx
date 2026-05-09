@@ -23,6 +23,8 @@ export const DEFAULT_CONTENT = {
   'home.projects.title': 'Recent Projects',
   'home.services.label': 'Our Expertise',
   'home.services.title': 'What We Do',
+  'home.interiors.title': 'Interior Design',
+  'home.landscape.title': 'Landscape & Gardening',
   
   // --- ABOUT PAGE ---
   'about.hero.label': 'Our Story',
@@ -154,6 +156,8 @@ export const CONTENT_LABELS = {
   'home.projects.title': 'Projects Section Title',
   'home.services.label': 'Services Section Label',
   'home.services.title': 'Services Section Title',
+  'home.interiors.title': 'Interiors Full-Width Title',
+  'home.landscape.title': 'Landscape Full-Width Title',
 
   // About
   'about.hero.label': 'Hero Label',

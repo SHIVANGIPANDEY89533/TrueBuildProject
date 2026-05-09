@@ -4,6 +4,8 @@ import { AnimatedCounter, MarqueeText, ServiceCard } from '../components';
 import { SERVICES, STUDIO_STORY, PROJECTS } from '../constants/data';
 import { useSiteImages } from '../context/SiteImagesContext';
 import { useContent } from '../context/ContentContext';
+import img10 from '../assets/images/img10.jpeg';
+import img16 from '../assets/images/img16.jpeg';
 
 const KnowMoreBtn = ({ to, light = false, label = 'Know More' }) => (
   <Link to={to} style={{
@@ -91,16 +93,7 @@ const Home = () => {
         flexDirection: isMobile ? 'column' : 'row',
         background: '#faf8f5', boxSizing: 'border-box',
       }}>
-        <div style={{ textAlign: 'center' }}>
-          <p style={{
-            fontSize: '0.62rem', letterSpacing: '5px',
-            textTransform: 'uppercase', color: '#bbb',
-            marginBottom: '10px', fontFamily: 'sans-serif',
-          }}>Started in</p>
-          <AnimatedCounter target={parseInt(content['home.started.year'] || '2018')} />
-        </div>
-        {!isMobile && <div style={{ width: '1px', height: '140px', background: '#ddd', flexShrink: 0 }} />}
-        <div style={{ flex: 1, maxWidth: '580px' }}>
+        <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', textAlign: isMobile ? 'left' : 'center' }}>
           <p style={{
             fontSize: '0.62rem', letterSpacing: '5px',
             textTransform: 'uppercase', color: '#c9a96e',
@@ -125,12 +118,61 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── SECTION 3: FULL WIDTH IMAGE ── */}
-      <section style={{ height: isMobile ? '40vh' : '65vh', overflow: 'hidden' }}>
-        <img src={images['home.hero.slide2']} alt="Interior" style={{
+      {/* ── SECTION 3: INTERIOR DESIGN (FULL WIDTH) ── */}
+      <section style={{ 
+        height: isMobile ? '65vh' : '85vh', 
+        position: 'relative', 
+        overflow: 'hidden' 
+      }}>
+        <img src={images['home.hero.slide2']} alt="Interior Design" style={{
           width: '100%', height: '100%',
           objectFit: 'cover', display: 'block',
         }} />
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(0,0,0,0.15)', 
+          display: 'flex', flexDirection: 'column',
+          justifyContent: 'flex-end',
+          padding: isMobile ? '40px 24px' : '80px 60px',
+          boxSizing: 'border-box',
+        }}>
+          <h2 style={{
+            color: '#fff', fontFamily: "'Georgia', serif",
+            fontSize: isMobile ? '1.8rem' : '2.8rem',
+            fontWeight: '300', letterSpacing: '4px',
+            textTransform: 'uppercase', margin: '0 0 10px',
+          }}>{content['home.interiors.title']}</h2>
+          <div style={{ width: '55px', height: '1px', background: '#c9a96e' }} />
+        </div>
+      </section>
+
+      {/* ── SECTION 3.5: LANDSCAPE & GARDENING ── */}
+      <section style={{ 
+        height: isMobile ? '65vh' : '85vh', 
+        position: 'relative', 
+        overflow: 'hidden',
+        marginTop: '3px'
+      }}>
+        <img src={img16} alt="Landscape & Gardening" style={{
+          width: '100%', height: '100%',
+          objectFit: 'cover', display: 'block',
+        }} />
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(0,0,0,0.15)',
+          display: 'flex', flexDirection: 'column',
+          justifyContent: 'flex-end',
+          padding: isMobile ? '40px 24px' : '80px 60px',
+          boxSizing: 'border-box',
+        }}>
+          <h2 style={{
+            color: '#fff', fontFamily: "'Georgia', serif",
+            fontSize: isMobile ? '1.8rem' : '2.8rem',
+            fontWeight: '300', letterSpacing: '4px',
+            textTransform: 'uppercase', margin: '0 0 10px',
+          }}>{content['home.landscape.title']}</h2>
+          <div style={{ width: '55px', height: '1px', background: '#c9a96e' }} />
+        </div>
       </section>
 
       {/* ── SECTION 4: SERVICES ── */}
